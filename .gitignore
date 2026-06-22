@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- IDX Exchange: never commit raw data or credentials ---
+# Only code + docs belong in this repo; MLS data and workbooks stay local.
+*.csv
+*.xlsx
+*.xls
+*.twbx
+data/
+.env
