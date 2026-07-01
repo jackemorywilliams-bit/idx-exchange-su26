@@ -24,6 +24,9 @@ week0/
   crmls_sold.py          # extraction → monthly sold CSV
 week1/
   concatenate_monthly.py # combine all months → listings.csv + sold.csv (Residential only)
+week2-3/
+  dataset_structuring.py # structure/validate sold, document types, filter, EDA → filtered CSV
+  mortgage_enrichment.py # merge FRED 30yr mortgage rate onto sold + listings → enriched CSVs
 ```
 
 Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
@@ -96,3 +99,28 @@ Observed on the 29-month set (Jan 2024 – May 2026):
 - **Concatenation is lossless** — the sum of the individual files equals the concatenated count for both datasets, confirming no rows are dropped on load.
 - **`PropertyType` categorization.** Keeping only `Residential` removes roughly a third of all rows. The categories filtered out are `ResidentialLease`, `Land`, `ResidentialIncome`, `ManufacturedInPark`, `CommercialSale`, `CommercialLease`, and `BusinessOpportunity`. `Residential` still spans every residential subtype (single-family, condo, townhouse, etc.).
 - **Stable residential share** across both slices (~66–67%), a sensible baseline for the market-level dashboards to come.
+
+### Weeks 2–3 — Dataset structuring/validation + mortgage-rate enrichment
+
+Two scripts. The first inspects and validates the **sold** dataset; the second enriches **both** datasets with mortgage rates.
+
+**`week2-3/dataset_structuring.py`** reads the 29 monthly Sold files **un-filtered** (so the property-type mix can be documented and the Residential filter genuinely demonstrated), then: reports structure (655,362 rows × 79 cols), documents all 8 property types, applies `PropertyType == 'Residential'`, builds null tables **before and after** the filter (flagging >90%-null columns), produces a numeric distribution summary for `ClosePrice`/`LivingArea`/`DaysOnMarket`, answers six EDA questions, and saves the filtered dataset.
+
+| Property type (sold) | Rows | Share |
+|---|--:|--:|
+| Residential | 438,115 | 66.85% |
+| ResidentialLease | 151,756 | 23.16% |
+| Land | 21,459 | 3.27% |
+| ManufacturedInPark | 17,935 | 2.74% |
+| ResidentialIncome | 17,823 | 2.72% |
+| CommercialSale / CommercialLease / BusinessOpportunity | 8,274 | 1.26% |
+
+Residential filter kept **438,115** rows — an exact match to the Week 1 baseline, asserted in-script as a continuity check.
+
+**`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (663 months, 1971→2026), and left-merges it onto both canonical datasets on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (438,115 sold, 480,383 listings).
+
+**Insights**
+- **`>90%`-null flags shift with the population** (14 columns before the filter, 15 after — `BuildingAreaTotal` only crosses the line once non-Residential rows are removed), so the report keeps a null table for each stage.
+- **EDA surfaced real dirt for the Weeks 4–5 cleaning phase** (flagged, not fixed): `DaysOnMarket` as low as **−288**, `LivingArea` of **0** and up to **17M** sqft, and 78 sold records with `CloseDate` before `ListingContractDate`.
+- **Market read (Residential sold):** median close price **$815K**; days-on-market median **19**; **39.5%** closed above list vs **42.8%** below; Bay-Area counties lead on median price (Del Norte tops the list but on a tiny sample — an outlier to treat with care).
+- **The mortgage merge is a clean monthly join** — every transaction month is covered by FRED, so no rows fall through.
