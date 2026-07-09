@@ -25,7 +25,8 @@ week0/
 week1/
   concatenate_monthly.py # combine all months → listings.csv + sold.csv (Residential only)
 week2-3/
-  dataset_structuring.py # structure/validate sold, document types, filter, EDA → filtered CSV
+  common.py              # shared file-discovery + column keep-list (single source of truth)
+  dataset_structuring.py # structure/validate sold, document types, filter, EDA, column-drop → reduced CSV
   mortgage_enrichment.py # merge FRED 30yr mortgage rate onto sold + listings → enriched CSVs
 ```
 
@@ -102,25 +103,28 @@ Observed on the 29-month set (Jan 2024 – May 2026):
 
 ### Weeks 2–3 — Dataset structuring/validation + mortgage-rate enrichment
 
-Two scripts. The first inspects and validates the **sold** dataset; the second enriches **both** datasets with mortgage rates.
+Two scripts plus a shared `common.py` (single source of truth for file discovery and the column keep-list). The first inspects, validates, and reduces the **sold** dataset; the second enriches **both** datasets with mortgage rates. Data now spans **Jan 2024 – June 2026 (30 months)** — the June 2026 files are picked up via a `YYYYMM` dedup across two data folders so newly-arrived months integrate without double-counting stale duplicates.
 
-**`week2-3/dataset_structuring.py`** reads the 29 monthly Sold files **un-filtered** (so the property-type mix can be documented and the Residential filter genuinely demonstrated), then: reports structure (655,362 rows × 79 cols), documents all 8 property types, applies `PropertyType == 'Residential'`, builds null tables **before and after** the filter (flagging >90%-null columns), produces a numeric distribution summary for `ClosePrice`/`LivingArea`/`DaysOnMarket`, answers six EDA questions, and saves the filtered dataset.
+**`week2-3/dataset_structuring.py`** reads the 30 monthly Sold files **un-filtered** (so the property-type mix can be documented and the Residential filter genuinely demonstrated), then: reports structure (680,885 rows × 79 cols), documents all 8 property types, applies `PropertyType == 'Residential'`, builds null tables **before and after** the filter (flagging >90%-null columns), produces a numeric distribution summary for `ClosePrice`/`LivingArea`/`DaysOnMarket`, answers six EDA questions, applies the **column-drop decision**, and saves the reduced dataset.
 
 | Property type (sold) | Rows | Share |
 |---|--:|--:|
-| Residential | 438,115 | 66.85% |
-| ResidentialLease | 151,756 | 23.16% |
-| Land | 21,459 | 3.27% |
-| ManufacturedInPark | 17,935 | 2.74% |
-| ResidentialIncome | 17,823 | 2.72% |
-| CommercialSale / CommercialLease / BusinessOpportunity | 8,274 | 1.26% |
+| Residential | 455,658 | 66.92% |
+| ResidentialLease | 157,408 | 23.12% |
+| Land | 22,173 | 3.26% |
+| ManufacturedInPark | 18,564 | 2.73% |
+| ResidentialIncome | 18,521 | 2.72% |
+| CommercialSale / CommercialLease / BusinessOpportunity | 8,561 | 1.25% |
 
-Residential filter kept **438,115** rows — an exact match to the Week 1 baseline, asserted in-script as a continuity check.
+Residential filter kept **455,658** rows — an exact match to a teammate's independent 30-month result, asserted in-script as a continuity check (baseline lineage: 438,115 @ 29 mo → 455,658 @ 30 mo).
 
-**`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (663 months, 1971→2026), and left-merges it onto both canonical datasets on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (438,115 sold, 480,383 listings).
+**Column-drop decision (79 → 31 columns).** Per the handbook clarification — drop columns >90% null, and keep only fields that feed the **Market Analysis** and **Competitive Analysis** dashboards — a 4-specialist review pruned the sold table to 31 columns: dropped **15** >90%-null columns plus **33** redundant/non-dashboard fields (kept one canonical each for id `ListingKey`, lot size `LotSizeSquareFeet`, list-agent `ListAgentFullName`; dropped amenities, schools, HOA, tax, address, co-agent, and originating-system fields). Kept: the price triad, date/DOM fields, status, property type/subtype, size/beds/baths/year, geography (county/city/zip/state/MLS-area/lat-long), and list/buyer office + agent fields.
+
+**`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (664 months, 1971→2026), rebuilds the reduced Residential sold + listings via `common`, and left-merges the rate on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (455,658 sold, 504,466 listings).
 
 **Insights**
 - **`>90%`-null flags shift with the population** (14 columns before the filter, 15 after — `BuildingAreaTotal` only crosses the line once non-Residential rows are removed), so the report keeps a null table for each stage.
-- **EDA surfaced real dirt for the Weeks 4–5 cleaning phase** (flagged, not fixed): `DaysOnMarket` as low as **−288**, `LivingArea` of **0** and up to **17M** sqft, and 78 sold records with `CloseDate` before `ListingContractDate`.
+- **EDA surfaced real dirt for the Weeks 4–5 cleaning phase** (flagged, not fixed): `DaysOnMarket` as low as **−288**, `LivingArea` of **0** and up to **17M** sqft, and 81 sold records with `CloseDate` before `ListingContractDate`.
 - **Market read (Residential sold):** median close price **$815K**; days-on-market median **19**; **39.5%** closed above list vs **42.8%** below; Bay-Area counties lead on median price (Del Norte tops the list but on a tiny sample — an outlier to treat with care).
 - **The mortgage merge is a clean monthly join** — every transaction month is covered by FRED, so no rows fall through.
+- **Adding June was a clean, verifiable increment** — the new totals reproduce a teammate's independent numbers to the row, confirming both pipelines agree.
