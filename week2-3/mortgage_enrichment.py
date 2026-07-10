@@ -62,11 +62,16 @@ def fetch_fred(retries=4, backoff=2.0):
 def monthly_rates():
     mortgage = fetch_fred()
     mortgage.columns = ["date", "rate_30yr_fixed"]
+    print("\nFRED weekly rates (head):")
+    print(mortgage.head().to_string(index=False))
+
     mortgage["year_month"] = mortgage["date"].dt.to_period("M")
     monthly = (mortgage.groupby("year_month")["rate_30yr_fixed"]
                        .mean().round(4).reset_index())
-    print(f"resampled weekly -> monthly: {len(monthly)} months "
+    print(f"\nresampled weekly -> monthly: {len(monthly)} months "
           f"({monthly['year_month'].min()} .. {monthly['year_month'].max()})")
+    print("monthly resampled rates (head):")
+    print(monthly.head().to_string(index=False))
     return monthly
 
 
