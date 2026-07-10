@@ -118,9 +118,51 @@ Two scripts plus a shared `common.py` (single source of truth for file discovery
 
 Residential filter kept **455,658** rows — an exact match to a teammate's independent 30-month result, asserted in-script as a continuity check (baseline lineage: 438,115 @ 29 mo → 455,658 @ 30 mo).
 
-**Column-drop decision (79 → 31 columns).** Per the handbook clarification — drop columns >90% null, and keep only fields that feed the **Market Analysis** and **Competitive Analysis** dashboards — a 4-specialist review pruned the sold table to 31 columns: dropped **15** >90%-null columns plus **33** redundant/non-dashboard fields (kept one canonical each for id `ListingKey`, lot size `LotSizeSquareFeet`, list-agent `ListAgentFullName`; dropped amenities, schools, HOA, tax, address, co-agent, and originating-system fields). Kept: the price triad, date/DOM fields, status, property type/subtype, size/beds/baths/year, geography (county/city/zip/state/MLS-area/lat-long), and list/buyer office + agent fields.
+**Column-drop decision (79 → 31 columns).** Per the handbook clarification — drop columns >90% null, and keep only fields that feed the **Market Analysis** and **Competitive Analysis** dashboards — a 4-specialist review pruned the sold table to 31 columns: dropped **15** >90%-null columns plus **33** redundant/non-dashboard fields (kept one canonical each for id `ListingKey`, lot size `LotSizeSquareFeet`, list-agent `ListAgentFullName`; dropped amenities, schools, HOA, tax, address, co-agent, and originating-system fields).
+
+![Column keep/drop breakdown: 79 to 31 columns](week2-3/figures/columns_kept_dropped.png)
+
+**The 31 columns kept** (by dashboard purpose):
+
+| Purpose | Columns |
+|---|---|
+| id / join key | `ListingKey` |
+| price | `ClosePrice`, `ListPrice`, `OriginalListPrice` |
+| dates + time-on-market | `CloseDate`, `ListingContractDate`, `PurchaseContractDate`, `DaysOnMarket` |
+| status + product mix | `MlsStatus`, `PropertyType`, `PropertySubType` |
+| size / attributes | `LivingArea`, `LotSizeSquareFeet`, `BedroomsTotal`, `BathroomsTotalInteger`, `YearBuilt` |
+| geography | `CountyOrParish`, `City`, `PostalCode`, `StateOrProvince`, `MLSAreaMajor`, `Latitude`, `Longitude` |
+| competitive — offices | `ListOfficeName`, `BuyerOfficeName` |
+| competitive — agents | `ListAgentFullName`, `ListAgentAOR`, `BuyerAgentFirstName`, `BuyerAgentLastName`, `BuyerAgentMlsId`, `BuyerAgentAOR` |
+
+**The 48 columns dropped** (by reason):
+
+| Reason | Columns |
+|---|---|
+| >90% null (15) | `WaterfrontYN`, `BasementYN`, `FireplacesTotal`, `AboveGradeFinishedArea`, `TaxAnnualAmount`, `BuilderName`, `TaxYear`, `BuildingAreaTotal`, `ElementarySchoolDistrict`, `CoBuyerAgentFirstName`, `BelowGradeFinishedArea`, `BusinessType`, `CoveredSpaces`, `LotSizeDimensions`, `MiddleOrJuniorSchoolDistrict` |
+| redundant duplicate (10) | `ListingKeyNumeric`, `ListingId` (→`ListingKey`); `LotSizeAcres`, `LotSizeArea` (→`LotSizeSquareFeet`); `ListAgentFirstName`, `ListAgentLastName` (→`ListAgentFullName`); `UnparsedAddress`, `StreetNumberNumeric`; `OriginatingSystemName`, `OriginatingSystemSubName` |
+| not dashboard-relevant (23) | `Flooring`, `ViewYN`, `PoolPrivateYN`, `CoListOfficeName`, `CoListAgentFirstName`, `CoListAgentLastName`, `AssociationFeeFrequency`, `ElementarySchool`, `AttachedGarageYN`, `ParkingTotal`, `SubdivisionName`, `BuyerOfficeAOR`, `ContractStatusChangeDate`, `MiddleOrJuniorSchool`, `FireplaceYN`, `Stories`, `HighSchool`, `Levels`, `MainLevelBedrooms`, `NewConstructionYN`, `GarageSpaces`, `HighSchoolDistrict`, `AssociationFee` |
 
 **`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (664 months, 1971→2026), rebuilds the reduced Residential sold + listings via `common`, and left-merges the rate on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (455,658 sold, 504,466 listings).
+
+Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joined onto transactions. Over that window the 30-yr fixed rate ranged **6.05 % (Feb 2026, low) → 7.06 % (May 2024, high)**, ending at **6.49 %** (Jun 2026):
+
+![US 30-year fixed mortgage rate, monthly average, Jan 2024 to Jun 2026 (FRED MORTGAGE30US)](week2-3/figures/mortgage_rate_30yr.png)
+
+<sub>Source: FRED `MORTGAGE30US` (weekly, Freddie Mac) resampled to a monthly average.</sub>
+
+| Month | Rate | Month | Rate | Month | Rate |
+|---|--:|---|--:|---|--:|
+| 2024-01 | 6.64% | 2024-11 | 6.80% | 2025-09 | 6.35% |
+| 2024-02 | 6.78% | 2024-12 | 6.71% | 2025-10 | 6.25% |
+| 2024-03 | 6.82% | 2025-01 | 6.96% | 2025-11 | 6.24% |
+| 2024-04 | 6.99% | 2025-02 | 6.84% | 2025-12 | 6.19% |
+| 2024-05 | **7.06%** | 2025-03 | 6.65% | 2026-01 | 6.10% |
+| 2024-06 | 6.92% | 2025-04 | 6.72% | 2026-02 | **6.05%** |
+| 2024-07 | 6.85% | 2025-05 | 6.82% | 2026-03 | 6.18% |
+| 2024-08 | 6.50% | 2025-06 | 6.82% | 2026-04 | 6.33% |
+| 2024-09 | 6.18% | 2025-07 | 6.72% | 2026-05 | 6.44% |
+| 2024-10 | 6.43% | 2025-08 | 6.59% | 2026-06 | 6.49% |
 
 **Insights**
 - **`>90%`-null flags shift with the population** (14 columns before the filter, 15 after — `BuildingAreaTotal` only crosses the line once non-Residential rows are removed), so the report keeps a null table for each stage.
