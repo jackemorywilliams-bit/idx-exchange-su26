@@ -28,6 +28,8 @@ week2-3/
   common.py              # shared file-discovery + column keep-list (single source of truth)
   dataset_structuring.py # structure/validate sold, document types, filter, EDA, column-drop → reduced CSV
   mortgage_enrichment.py # merge FRED 30yr mortgage rate onto sold + listings → enriched CSVs
+week4-5/
+  data_cleaning.py       # type dates/numerics, flag quality issues, emit flagged + clean-view CSVs
 ```
 
 Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
@@ -170,3 +172,39 @@ Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joi
 - **Market read (Residential sold):** median close price **$815K**; days-on-market median **19**; **39.5%** closed above list vs **42.8%** below; Bay-Area counties lead on median price (Del Norte tops the list but on a tiny sample — an outlier to treat with care).
 - **The mortgage merge is a clean monthly join** — every transaction month is covered by FRED, so no rows fall through.
 - **Adding June was a clean, verifiable increment** — the new totals reproduce a teammate's independent numbers to the row, confirming both pipelines agree.
+
+### Weeks 4–5 — Data cleaning & preparation
+
+**`week4-5/data_cleaning.py`** takes the Weeks 2–3 enriched datasets and prepares them for reliable analytics — **non-destructively**. It types the columns (dates → `datetime`, numerics → numeric), adds a boolean **flag** column for every quality issue, and emits two artifacts per dataset: a **fully-flagged** file (all rows kept, for audit) and a **clean view** (only the unambiguous numeric-error rows removed, for analysis). Row counts are re-asserted against the `455,658 / 504,466` anchors.
+
+Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMarket<0`, negative beds/baths — these drive the clean-view removal); **date-consistency** (`listing_after_close_flag`, `purchase_after_close_flag`, `negative_timeline_flag`, strict `>` so same-day escrow is fine, NaT-safe so unsold listings never mis-flag); **geographic** (missing / zero-sentinel / positive-longitude / outside the California box, lat 32.5–42.05 & lon −124.5 to −114.1); and a tight set of **review-outliers** tied to dirt seen in Weeks 2–3 (`< $10k` / `> $100M` price, `> 25k sqft` living area, implausible year built).
+
+![Data-quality flags on the sold dataset — missing coordinates dominate; every other issue is under 0.1%](week4-5/figures/data_quality_flags.png)
+
+**Results (sold, 455,658 rows):**
+
+| Flag | Rows | % |
+|---|--:|--:|
+| Missing coordinates | 53,637 | 11.77% |
+| Timeline out of order (any) | 405 | 0.089% |
+| `LivingArea <= 0` | 161 | 0.035% |
+| Purchase date > close | 92 | 0.020% |
+| Listing date > close | 81 | 0.018% |
+| Outside CA box | 65 | 0.014% |
+| `DaysOnMarket < 0` | 48 | 0.011% |
+| Zero-sentinel coordinate | 44 | 0.010% |
+| Longitude > 0 (sign error) | 34 | 0.007% |
+| `LivingArea > 25k sqft` | 15 | 0.003% |
+| Price < $10k / YearBuilt implausible | 9 / 9 | 0.002% |
+| Price > $100M | 2 | 0.000% |
+| **Any review flag** | **54,126** | **11.88%** |
+| **Hard-invalid (removed in clean view)** | **209** | **0.046%** |
+
+Listings behave the same way (504,466 rows; 304 hard-invalid removed → 504,162 clean; missing coordinates 49,467 / 9.8%).
+
+**Insights**
+- **Missing geocoordinates are the one real data-quality problem** — ~11.8% of sold rows (and ~9.8% of listings) have no lat/long. Every *other* issue combined touches under 0.1% of rows, so map-based visuals must handle null coordinates explicitly, but price/time analysis is essentially clean.
+- **The exotic errors we feared are rare.** The −288 days-on-market, 0- and 17M-sqft living areas, and the 81 close-before-list rows are all real — but they total a few hundred rows, so removing them costs **&lt;0.05%** of the data.
+- **`ClosePrice <= 0` never occurs** — the suspicious tail is the *low positive* prices (`< $10k`, 9 rows: likely non-arms-length transfers), which we flag for review rather than delete.
+- **Flag, don't delete.** Because `0` is legitimate for days-on-market (same-day sale), bedrooms (land/studio), and baths, and because border coordinates can be real, the script only *removes* the unambiguous numeric errors and *flags* everything else — nothing analytically meaningful is thrown away.
+- **`ContractStatusChangeDate`** (named by the handbook for datetime conversion) was intentionally dropped in the Weeks 2–3 column-reduction as non-dashboard; the three date fields that survived carry all the consistency checks, and the conversion loop is guarded to pick it up automatically if it's ever re-added upstream.
