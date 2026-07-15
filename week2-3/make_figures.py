@@ -27,7 +27,7 @@ plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Helvetica Neue", "Arial", "DejaVu Sans"],
     "figure.facecolor": SURFACE, "axes.facecolor": SURFACE,
-    "text.color": INK, "axes.labelcolor": INK2, "xtick.color": MUTED,
+    "text.color": INK, "axes.labelcolor": INK2, "xtick.color": INK2,
     "ytick.color": INK2, "axes.edgecolor": MUTED,
 })
 
@@ -63,27 +63,28 @@ DROP_NOTRELEVANT = [
 
 
 def fig_columns():
-    cats = ["Kept — dashboard fields", "Dropped — >90% null",
-            "Dropped — redundant dup", "Dropped — not dashboard-relevant"]
-    vals = [len(KEPT), len(DROP_NULL), len(DROP_REDUNDANT), len(DROP_NOTRELEVANT)]
-    colors = [BLUE, ORANGE, YELLOW, AQUA]
+    # Kept is the saturated color story; the three drop reasons are one muted
+    # family (descending) so kept-vs-dropped reads at a glance.
+    cats = ["Kept — dashboard fields", "Dropped — not dashboard-relevant",
+            "Dropped — >90% null", "Dropped — redundant duplicate"]
+    vals = [len(KEPT), len(DROP_NOTRELEVANT), len(DROP_NULL), len(DROP_REDUNDANT)]
+    colors = [BLUE, "#a8a6a0", "#bcbab3", "#cfcdc6"]
 
     fig, ax = plt.subplots(figsize=(9, 3.2), dpi=200)
     y = range(len(cats))
     ax.barh(y, vals, color=colors, height=0.62, zorder=3)
     for i, v in enumerate(vals):
-        ax.text(v + 0.6, i, f"{v}  ({v/79*100:.0f}%)", va="center", ha="left",
-                color=INK, fontsize=11, fontweight="bold")
+        ax.text(v + 0.6, i, f"{v} ({v/79*100:.0f}%)", va="center", ha="left",
+                color=INK, fontsize=10, fontweight="bold")
     ax.set_yticks(list(y)); ax.set_yticklabels(cats, fontsize=10, color=INK)
     ax.invert_yaxis()
     ax.set_xlim(0, 37)
-    ax.set_xlabel("number of columns", fontsize=9)
-    ax.set_title("Column keep/drop decision:  79 to 31 columns  "
-                 "(kept 31, dropped 48)", fontsize=12.5, fontweight="bold",
-                 color=INK, pad=10, loc="left")
-    ax.xaxis.grid(True, color=GRID, linewidth=0.8, zorder=0)
-    ax.set_axisbelow(True)
-    for s in ("top", "right", "left"):
+    ax.set_title("Column keep/drop decision: 79 to 31 columns",
+                 fontsize=12.5, fontweight="bold", color=INK, pad=22, loc="left")
+    ax.text(0, 1.08, "kept 31 · dropped 48 — of the 79 source columns",
+            transform=ax.transAxes, fontsize=10, color=INK2)
+    ax.set_xticks([])
+    for s in ("top", "right", "left", "bottom"):
         ax.spines[s].set_visible(False)
     ax.tick_params(length=0)
     fig.tight_layout()
@@ -102,23 +103,30 @@ def monthly_rates():
 
 
 def fig_mortgage(mon):
+    import matplotlib.dates as mdates
+
     x = [p.to_timestamp() for p in mon.index]
     yv = mon.values
 
     fig, ax = plt.subplots(figsize=(9, 3.6), dpi=200)
     ax.plot(x, yv, color=BLUE, linewidth=2, zorder=3)
     ax.scatter(x, yv, color=BLUE, s=14, zorder=4)
+    ax.scatter(x[-1], yv[-1], color=BLUE, s=46, zorder=5)  # emphasize the endpoint
 
-    # direct-label first, last, min, max
+    # direct-label first, last, min, max (padding + placement avoid collisions)
     imin, imax = int(yv.argmin()), int(yv.argmax())
-    for i, dy, ha in [(0, 8, "left"), (len(yv) - 1, 8, "right"),
-                      (imin, -14, "center"), (imax, 8, "center")]:
+    for i, dy, ha in [(0, -15, "center"), (len(yv) - 1, 9, "right"),
+                      (imin, -15, "center"), (imax, 8, "center")]:
         ax.annotate(f"{yv[i]:.2f}%", (x[i], yv[i]),
                     textcoords="offset points", xytext=(0, dy), ha=ha,
                     fontsize=9.5, fontweight="bold", color=INK)
 
+    ax.set_ylim(5.85, 7.25)
+    ax.set_xlim(x[0] - pd.Timedelta(days=20), x[-1] + pd.Timedelta(days=30))
+    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=4))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
     ax.set_ylabel("30-yr fixed rate (%)", fontsize=9)
-    ax.set_title("US 30-yr fixed mortgage rate — monthly avg, Jan 2024 – Jun 2026",
+    ax.set_title("US 30-yr fixed mortgage rate — monthly avg, Jan 2024 — Jun 2026",
                  fontsize=12.5, fontweight="bold", color=INK, pad=12, loc="left")
     ax.yaxis.grid(True, color=GRID, linewidth=0.8, zorder=0)
     ax.set_axisbelow(True)
@@ -126,7 +134,8 @@ def fig_mortgage(mon):
         ax.spines[s].set_visible(False)
     ax.spines["left"].set_color(MUTED); ax.spines["bottom"].set_color(MUTED)
     ax.tick_params(length=0, labelsize=9)
-    fig.autofmt_xdate(rotation=0, ha="center")
+    fig.text(0.01, -0.02, "Source: FRED MORTGAGE30US, monthly mean of weekly values",
+             fontsize=8, color=MUTED)
     fig.tight_layout()
     out = os.path.join(FIG_DIR, "mortgage_rate_30yr.png")
     fig.savefig(out, bbox_inches="tight", facecolor=SURFACE)

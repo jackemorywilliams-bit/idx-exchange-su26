@@ -7,6 +7,10 @@ FLAGS every quality issue as a boolean column, and emits two artifacts per datas
 a fully-flagged file (all rows kept, for audit) and a "clean view" (only the
 unambiguous numeric-error rows removed, for analysis).
 
+DEFINITION: "clean view" = free of HARD NUMERIC errors only (hard_invalid_flag rows
+removed). Review-flagged rows (broken timelines, geo issues, outliers) are KEPT in
+the clean view with their flags -- filter on the flag columns for stricter views.
+
 Steps:
   1. Type conversion:
        - dates -> datetime (CloseDate, ListingContractDate, PurchaseContractDate),
@@ -46,8 +50,10 @@ Steps:
      total, and the clean-view row count. Rows are only ever removed by hard_invalid.
 """
 
+import datetime
 import os
 
+import numpy as np
 import pandas as pd
 
 # --- Configuration -----------------------------------------------------------
@@ -70,7 +76,7 @@ NUMERIC_COLS = ["ClosePrice", "ListPrice", "OriginalListPrice", "LivingArea",
                 "LotSizeSquareFeet", "DaysOnMarket", "BedroomsTotal",
                 "BathroomsTotalInteger", "YearBuilt", "Latitude", "Longitude",
                 "rate_30yr_fixed"]
-NEXT_YEAR = 2027  # current year (2026) + 1
+NEXT_YEAR = datetime.date.today().year + 1  # YearBuilt beyond this is implausible
 
 
 def read_any(path):
@@ -93,10 +99,16 @@ def type_convert(df):
 
 
 def col(df, name):
-    """Return a numeric Series for `name`, or an all-NaN series if the column is absent."""
+    """Return the Series for `name`, or an all-missing Series if the column is absent.
+
+    The fallback dtype matters: date columns must fall back to NaT (datetime), not
+    float NaN, or the date comparisons would raise on a mixed dtype.
+    """
     if name in df.columns:
         return df[name]
-    return pd.Series(pd.NA, index=df.index, dtype="float64")
+    if name in DATE_COLS:
+        return pd.Series(pd.NaT, index=df.index, dtype="datetime64[ns]")
+    return pd.Series(np.nan, index=df.index, dtype="float64")
 
 
 def add_flags(df):
@@ -131,6 +143,9 @@ def add_flags(df):
     df["missing_coords_flag"] = (lat.isna() | lon.isna())
     df["zero_coord_flag"] = ((lat == 0) | (lon == 0)).fillna(False)
     df["positive_longitude_flag"] = (lon > 0).fillna(False)
+    # Note: positive_longitude rows are by construction also out_of_ca (a positive
+    # longitude is outside the CA box); the sign-error flag is kept separately as
+    # the actionable diagnostic. Summary counts therefore overlap on these rows.
     in_ca = lat.between(LAT_MIN, LAT_MAX) & lon.between(LON_MIN, LON_MAX)
     df["out_of_ca_flag"] = (
         (~in_ca) & lat.notna() & lon.notna() & (lat != 0) & (lon != 0))
@@ -158,6 +173,23 @@ def summarize(df, label):
                .sort_values("count", ascending=False))
     print(f"\n=== VALIDATION SUMMARY: {label} ({len(df):,} rows) ===")
     print(summary.to_string(index=False))
+
+    # Duplicate-key check (report only; dedup is not this deliverable's job).
+    n_dup = int(df["ListingKey"].duplicated().sum())
+    print(f"duplicate ListingKey rows: {n_dup}")
+
+    # Missingness-bias audit: coordinate nulls are NOT random -- show where they
+    # concentrate so map-based analyses know their subset is biased (MNAR).
+    print("\n--- coordinate-missingness bias (missing_coords_flag rate) ---")
+    ym = df["year_month"].astype(str).str[:4]
+    print("by close year:")
+    print((df.groupby(ym)["missing_coords_flag"].mean() * 100).round(1).to_string())
+    by_cty = df.groupby("CountyOrParish").agg(
+        n=("missing_coords_flag", "size"), miss_pct=("missing_coords_flag", "mean"))
+    by_cty = by_cty[by_cty.n >= 2000]
+    by_cty["miss_pct"] = (by_cty["miss_pct"] * 100).round(1)
+    print("top 5 counties by missing rate (min 2,000 rows):")
+    print(by_cty.sort_values("miss_pct", ascending=False).head(5).to_string())
     return summary
 
 
@@ -171,6 +203,12 @@ def clean(prefix, in_path):
     df = type_convert(df)
     present_dates = [c for c in DATE_COLS if c in df.columns]
     print(f"dates converted: {present_dates}")
+    # Report nulls after coercion so a partially-unparseable column can't hide:
+    # unparseable values became NaT/NaN above and show up in these counts.
+    typed = present_dates + [c for c in NUMERIC_COLS if c in df.columns]
+    nulls = df[typed].isnull().sum()
+    print("nulls after type coercion (unparseable values included):")
+    print(nulls[nulls > 0].to_string() if (nulls > 0).any() else "  none")
 
     df = add_flags(df)
     summarize(df, prefix)
@@ -224,4 +262,15 @@ if __name__ == "__main__":
 #   | invalid_livingarea 261 | out_of_ca 155 | purchase_after_close 94 | ...
 # HEADLINE: missing coordinates (~11.8% sold / ~9.8% listings) is the dominant issue;
 #   every other flag is < 0.1%. Hard removals are tiny (<0.07%).
+# COUNCIL STRESS-TEST FINDINGS (verified against the data):
+#   - Coordinate missingness is NOT random (MNAR): ~28% of 2024 closings vs <1%
+#     from 2025 on; concentrated in Bay-Area counties (Santa Clara 35%); missing rows
+#     skew ~$100K pricier. Maps on the coordinate subset are biased -- use county/
+#     city/zip (0% null) for geo aggregation.
+#   - Sold and Listings overlap on 427,808 ListingKeys (~94% of sold): never union
+#     the two files; anti-join on ListingKey when combining.
+#   - DaysOnMarket is a CRMLS system field (= date-diff on only ~55% of rows).
+#   - Duplicate ListingKeys: 2 (sold) / 6 (listings) -- reported, not removed.
+#   - The 161 LivingArea<=0 removals skew expensive (median ~$1.77M): zero likely
+#     means unrecorded size, an acknowledged trade-off of the hard-invalid rule.
 # =============================================================================

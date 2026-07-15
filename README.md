@@ -28,8 +28,10 @@ week2-3/
   common.py              # shared file-discovery + column keep-list (single source of truth)
   dataset_structuring.py # structure/validate sold, document types, filter, EDA, column-drop → reduced CSV
   mortgage_enrichment.py # merge FRED 30yr mortgage rate onto sold + listings → enriched CSVs
+  make_figures.py        # README figures (column keep/drop, mortgage-rate line)
 week4-5/
   data_cleaning.py       # type dates/numerics, flag quality issues, emit flagged + clean-view CSVs
+  make_figures.py        # README figure (data-quality flag prevalence)
 ```
 
 Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
@@ -41,22 +43,23 @@ Two separate scripts, because listings and sold are two fundamentally different 
 - **Listings** — the full universe of properties placed on the market, regardless of outcome.
 - **Sold** — the narrower subset that actually closed.
 
-By the end of the summer there are only **two CSVs total** — `listings.csv` and `sold.csv`. Each week's run *updates the same two files* rather than creating a fresh pair.
+There are two canonical **raw** datasets — `listings.csv` and `sold.csv` — which each month's pull grows in place. Later stages derive enriched and cleaned versions *from* them (reduced → rate-enriched → flagged + clean-view; see Weeks 2–5), always as separate downstream artifacts, never by mutating the raw pair.
 
 ## Weekly workflow (end to end)
 
-1. Run the two Python scripts → update the same two CSVs (`listings.csv`, `sold.csv`).
-2. Near the end of the internship, load both CSVs into **Tableau Public Desktop**.
-3. Save the full working workbook as a `.twbx` (all worksheets visible).
-4. Save a second `.twbx` with worksheets hidden and only dashboards visible.
-5. Publish that version to **public.tableau.com**.
+1. Run the two extraction scripts → update the two raw datasets.
+2. Run the downstream stages (Weeks 2–5) to produce the enriched, cleaned versions.
+3. Near the end of the internship, load the two Weeks 4–5 **clean-view** CSVs into **Tableau Public Desktop**.
+4. Save the full working workbook as a `.twbx` (all worksheets visible).
+5. Save a second `.twbx` with worksheets hidden and only dashboards visible.
+6. Publish that version to **public.tableau.com**.
 
 ## How to run
 
-Requires Python 3 with `requests` and `pandas`.
+Requires Python 3 with `requests` and `pandas` (plus `matplotlib` for the figure scripts).
 
 ```bash
-pip install requests pandas
+pip install requests pandas matplotlib
 
 # The Trestle proxy key is NOT stored in this repo — set it in your shell:
 export TRESTLE_PROXY_KEY="<your IDX Exchange proxy key>"
@@ -69,6 +72,16 @@ python3 week0/crmls_sold.py   202602 202603 202604 202605
 # Point CRMLS_DATA_DIR at the folder of monthly CRMLS*.csv files:
 export CRMLS_DATA_DIR="/path/to/monthly/files"
 python3 week1/concatenate_monthly.py
+
+# Weeks 2–3 — structure/reduce sold, then enrich both datasets with FRED rates:
+export CRMLS_OUTPUT_DIR="/path/to/deliverables"
+python3 week2-3/dataset_structuring.py
+python3 week2-3/mortgage_enrichment.py
+
+# Weeks 4–5 — type, flag, and emit flagged + clean-view CSVs
+# (reads the Weeks 2–3 "With Rates" files from CRMLS_DELIV_DIR):
+export CRMLS_DELIV_DIR="$CRMLS_OUTPUT_DIR"
+python3 week4-5/data_cleaning.py
 ```
 
 ---
@@ -96,6 +109,8 @@ Observed on the 29-month set (Jan 2024 – May 2026):
 | Listings | 29            | 729,251             | **480,383** (~66%) |
 | Sold     | 29            | 655,362             | **438,115** (~67%) |
 
+*(Totals as of the original 29-month set; June 2026 was added in Weeks 2–3 — see the lineage notes there.)*
+
 **Interpretation & insights**
 
 - **Two source encodings.** The historical FileZilla files are **Windows-1252**, while the API-extraction files are **UTF-8**. A naive read crashes on byte `0x92` (a smart quote). The script reads each file as UTF-8 with a **cp1252 fallback** and writes clean UTF-8 — a real data-quality gotcha the team should standardize on going forward.
@@ -116,7 +131,9 @@ Two scripts plus a shared `common.py` (single source of truth for file discovery
 | Land | 22,173 | 3.26% |
 | ManufacturedInPark | 18,564 | 2.73% |
 | ResidentialIncome | 18,521 | 2.72% |
-| CommercialSale / CommercialLease / BusinessOpportunity | 8,561 | 1.25% |
+| CommercialSale / CommercialLease / BusinessOpportunity | 8,561 | 1.26% |
+
+<sub>Shares are rounded and may not sum to exactly 100%.</sub>
 
 Residential filter kept **455,658** rows — an exact match to a teammate's independent 30-month result, asserted in-script as a continuity check (baseline lineage: 438,115 @ 29 mo → 455,658 @ 30 mo).
 
@@ -145,9 +162,9 @@ Residential filter kept **455,658** rows — an exact match to a teammate's inde
 | redundant duplicate (10) | `ListingKeyNumeric`, `ListingId` (→`ListingKey`); `LotSizeAcres`, `LotSizeArea` (→`LotSizeSquareFeet`); `ListAgentFirstName`, `ListAgentLastName` (→`ListAgentFullName`); `UnparsedAddress`, `StreetNumberNumeric`; `OriginatingSystemName`, `OriginatingSystemSubName` |
 | not dashboard-relevant (23) | `Flooring`, `ViewYN`, `PoolPrivateYN`, `CoListOfficeName`, `CoListAgentFirstName`, `CoListAgentLastName`, `AssociationFeeFrequency`, `ElementarySchool`, `AttachedGarageYN`, `ParkingTotal`, `SubdivisionName`, `BuyerOfficeAOR`, `ContractStatusChangeDate`, `MiddleOrJuniorSchool`, `FireplaceYN`, `Stories`, `HighSchool`, `Levels`, `MainLevelBedrooms`, `NewConstructionYN`, `GarageSpaces`, `HighSchoolDistrict`, `AssociationFee` |
 
-**`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (664 months, 1971→2026), rebuilds the reduced Residential sold + listings via `common`, and left-merges the rate on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (455,658 sold, 504,466 listings).
+**`week2-3/mortgage_enrichment.py`** fetches the FRED `MORTGAGE30US` 30-year fixed series (weekly, no API key), resamples it to monthly averages (664 months, 1971→2026), rebuilds the reduced Residential sold + listings via `common`, and left-merges the rate on a `year_month` key (sold←`CloseDate`, listings←`ListingContractDate`). Validation confirmed **0 null rates** on both (455,658 sold, 504,466 listings; listings lineage: 480,383 @ 29 mo → 504,466 @ 30 mo).
 
-Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joined onto transactions. Over that window the 30-yr fixed rate ranged **6.05 % (Feb 2026, low) → 7.06 % (May 2024, high)**, ending at **6.49 %** (Jun 2026):
+Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joined onto transactions. Over that window the 30-yr fixed rate ranged **6.05% (Feb 2026, low) → 7.06% (May 2024, high)**, ending at **6.49%** (Jun 2026):
 
 ![US 30-year fixed mortgage rate, monthly average, Jan 2024 to Jun 2026 (FRED MORTGAGE30US)](week2-3/figures/mortgage_rate_30yr.png)
 
@@ -177,7 +194,9 @@ Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joi
 
 **`week4-5/data_cleaning.py`** takes the Weeks 2–3 enriched datasets and prepares them for reliable analytics — **non-destructively**. It types the columns (dates → `datetime`, numerics → numeric), adds a boolean **flag** column for every quality issue, and emits two artifacts per dataset: a **fully-flagged** file (all rows kept, for audit) and a **clean view** (only the unambiguous numeric-error rows removed, for analysis). Row counts are re-asserted against the `455,658 / 504,466` anchors.
 
-Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMarket<0`, negative beds/baths — these drive the clean-view removal); **date-consistency** (`listing_after_close_flag`, `purchase_after_close_flag`, `negative_timeline_flag`, strict `>` so same-day escrow is fine, NaT-safe so unsold listings never mis-flag); **geographic** (missing / zero-sentinel / positive-longitude / outside the California box, lat 32.5–42.05 & lon −124.5 to −114.1); and a tight set of **review-outliers** tied to dirt seen in Weeks 2–3 (`< $10k` / `> $100M` price, `> 25k sqft` living area, implausible year built).
+Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMarket<0`, negative beds/baths — their union is `hard_invalid_flag`, the "hard-invalid" in the table below, and the *only* thing that drives clean-view removal); **date-consistency** (`listing_after_close_flag`, `purchase_after_close_flag`, `negative_timeline_flag`, strict `>` so same-day escrow is fine; a missing date never triggers a flag — those rows are *unaudited*, not validated); **geographic** (missing / zero-sentinel / positive-longitude / outside the California box, lat 32.5–42.05 & lon −124.5 to −114.1); and a tight set of **review-outliers** tied to dirt seen in Weeks 2–3 (`< $10k` / `> $100M` price, `> 25k sqft` living area, implausible year built — round-number thresholds chosen for explainability; a percentile-based bound is noted as the more rigorous upgrade).
+
+> **"Clean view" means free of hard numeric errors only.** Review-flagged rows (broken timelines, geo issues, outliers) are kept in it *with their flags* — filter on the flag columns for stricter cuts.
 
 ![Data-quality flags on the sold dataset — missing coordinates dominate; every other issue is under 0.1%](week4-5/figures/data_quality_flags.png)
 
@@ -185,7 +204,7 @@ Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMar
 
 | Flag | Rows | % |
 |---|--:|--:|
-| Missing coordinates | 53,637 | 11.77% |
+| Missing coordinates (`missing_coords_flag`) | 53,637 | 11.77% |
 | Timeline out of order (any) | 405 | 0.089% |
 | `LivingArea <= 0` | 161 | 0.035% |
 | Purchase date > close | 92 | 0.020% |
@@ -195,16 +214,19 @@ Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMar
 | Zero-sentinel coordinate | 44 | 0.010% |
 | Longitude > 0 (sign error) | 34 | 0.007% |
 | `LivingArea > 25k sqft` | 15 | 0.003% |
-| Price < $10k / YearBuilt implausible | 9 / 9 | 0.002% |
-| Price > $100M | 2 | 0.000% |
+| Price < $10k | 9 | 0.002% |
+| YearBuilt implausible | 9 | 0.002% |
+| Price > $100M | 2 | <0.001% |
 | **Any review flag** | **54,126** | **11.88%** |
 | **Hard-invalid (removed in clean view)** | **209** | **0.046%** |
 
-Listings behave the same way (504,466 rows; 304 hard-invalid removed → 504,162 clean; missing coordinates 49,467 / 9.8%).
+Sold: 209 hard-invalid removed → **455,449-row clean view**. Listings behave the same way (504,466 rows; 304 hard-invalid removed → 504,162 clean; missing coordinates 49,467 / 9.8%). Geo flag counts overlap by design: every positive-longitude row is also outside the CA box.
 
 **Insights**
-- **Missing geocoordinates are the one real data-quality problem** — ~11.8% of sold rows (and ~9.8% of listings) have no lat/long. Every *other* issue combined touches under 0.1% of rows, so map-based visuals must handle null coordinates explicitly, but price/time analysis is essentially clean.
-- **The exotic errors we feared are rare.** The −288 days-on-market, 0- and 17M-sqft living areas, and the 81 close-before-list rows are all real — but they total a few hundred rows, so removing them costs **&lt;0.05%** of the data.
-- **`ClosePrice <= 0` never occurs** — the suspicious tail is the *low positive* prices (`< $10k`, 9 rows: likely non-arms-length transfers), which we flag for review rather than delete.
+- **Missing geocoordinates are the one real data-quality problem — and they are *not* random.** ~11.8% of sold rows lack lat/long, but the missingness concentrates in **2024 closings (≈28%, vs <1% from 2025 on)**, in **Bay-Area counties** (Santa Clara 35%, San Mateo 30%, Alameda 29%), and skews **~$100K pricier** than rows with coordinates. Any map built on the coordinate subset systematically under-represents 2024, Northern California, and higher-priced homes — use `CountyOrParish`/`City`/`PostalCode` (0% null) for geographic aggregation instead.
+- **The two datasets overlap heavily — never union them.** 427,808 `ListingKey`s (≈94% of sold) appear in *both* files: the listings file contains most closed transactions. Stacking the two would double-count ~428K sales; combine them only via an anti-join on `ListingKey`.
+- **`DaysOnMarket` is a CRMLS system field, not `Close − List`.** Only ~55% of rows have DOM equal to the date difference, which is why DOM<0 (48 rows) and broken timelines (405) disagree — they measure different things. Compute your own durations only on rows where `negative_timeline_flag` is false.
+- **The exotic errors we feared are rare.** The −288 days-on-market, 0- and 17M-sqft living areas, and the 81 close-before-list rows are real — but they total a few hundred rows. Only the **209 hard-invalid** rows (0.046%) are actually removed in the clean view; the rest stay, flagged for review. One honest caveat: the 161 `LivingArea <= 0` removals skew expensive (median ≈$1.77M) — zero there likely means *unrecorded size on real luxury sales*, not fake sales, so the removal trims a sliver of the luxury tail.
+- **No *non-null* `ClosePrice <= 0` occurs** — the suspicious tail is the *low positive* prices (`< $10k`, 9 rows: likely non-arms-length transfers), flagged for review rather than deleted.
 - **Flag, don't delete.** Because `0` is legitimate for days-on-market (same-day sale), bedrooms (land/studio), and baths, and because border coordinates can be real, the script only *removes* the unambiguous numeric errors and *flags* everything else — nothing analytically meaningful is thrown away.
 - **`ContractStatusChangeDate`** (named by the handbook for datetime conversion) was intentionally dropped in the Weeks 2–3 column-reduction as non-dashboard; the three date fields that survived carry all the consistency checks, and the conversion loop is guarded to pick it up automatically if it's ever re-added upstream.
