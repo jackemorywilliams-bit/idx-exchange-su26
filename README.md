@@ -192,41 +192,58 @@ Only the **30 months that overlap the MLS data (Jan 2024 – Jun 2026)** are joi
 
 ### Weeks 4–5 — Data cleaning & preparation
 
-**`week4-5/data_cleaning.py`** takes the Weeks 2–3 enriched datasets and prepares them for reliable analytics — **non-destructively**. It types the columns (dates → `datetime`, numerics → numeric), adds a boolean **flag** column for every quality issue, and emits two artifacts per dataset: a **fully-flagged** file (all rows kept, for audit) and a **clean view** (only the unambiguous numeric-error rows removed, for analysis). Row counts are re-asserted against the `455,658 / 504,466` anchors.
+**What this week does, in one sentence:** find every bad or suspicious value in the data, mark it, and remove only the rows that are truly impossible — so the analysis that follows can be trusted.
 
-Flag families: **numeric-invalid** (`ClosePrice<=0`, `LivingArea<=0`, `DaysOnMarket<0`, negative beds/baths — their union is `hard_invalid_flag`, the "hard-invalid" in the table below, and the *only* thing that drives clean-view removal); **date-consistency** (`listing_after_close_flag`, `purchase_after_close_flag`, `negative_timeline_flag`, strict `>` so same-day escrow is fine; a missing date never triggers a flag — those rows are *unaudited*, not validated); **geographic** (missing / zero-sentinel / positive-longitude / outside the California box, lat 32.5–42.05 & lon −124.5 to −114.1); and a tight set of **review-outliers** tied to dirt seen in Weeks 2–3 (`< $10k` / `> $100M` price, `> 25k sqft` living area, implausible year built — round-number thresholds chosen for explainability; a percentile-based bound is noted as the more rigorous upgrade).
+**`week4-5/data_cleaning.py`** works in three steps:
 
-> **"Clean view" means free of hard numeric errors only.** Review-flagged rows (broken timelines, geo issues, outliers) are kept in it *with their flags* — filter on the flag columns for stricter cuts.
+1. **Fix the column types.** Dates were stored as plain text; the script converts them into real dates so they can be sorted and compared. Numeric fields are confirmed to be real numbers.
+2. **Mark problems instead of deleting them.** Every quality issue gets its own true/false **flag** column, so nothing is silently thrown away — a flagged row can always be inspected or filtered later.
+3. **Save two files per dataset:**
+   - a **flagged** file — every row kept, all flags attached (the audit trail), and
+   - a **clean view** — the same data with only the *impossible* rows removed (a $0 sale, a 0-sqft home, negative days on market). Everything else stays in, flagged.
+
+The flags fall into four groups:
+
+| Group | What it catches | Example |
+|---|---|---|
+| Impossible numbers | Values that cannot be real. These are the **only** rows removed from the clean view. | price ≤ $0, size ≤ 0 sqft, negative days on market, negative beds/baths |
+| Dates out of order | A sale can't close before it was listed. | close date earlier than listing date |
+| Bad map coordinates | Missing, zeroed, or outside California. | longitude with the wrong sign |
+| Worth a second look | Real-looking but extreme values, kept but flagged. | price under $10k or over $100M, home over 25,000 sqft |
+
+Two details worth knowing: a row with a *missing* date is never flagged (it can't be checked, so it's "unaudited," not "clean"), and the review thresholds are deliberately round numbers ($10k, $100M, 25k sqft) so anyone can understand and challenge them.
+
+> **"Clean" here means one specific thing:** free of impossible numbers. Rows with date or map issues are still in the clean view, carrying their flags — filter on a flag column if you want a stricter cut.
 
 ![Data-quality flags on the sold dataset — missing coordinates dominate; every other issue is under 0.1%](week4-5/figures/data_quality_flags.png)
 
-**Results (sold, 455,658 rows):**
+**What the flags found (sold dataset, 455,658 rows):**
 
-| Flag | Rows | % |
+| Issue | Rows | % of data |
 |---|--:|--:|
-| Missing coordinates (`missing_coords_flag`) | 53,637 | 11.77% |
-| Timeline out of order (any) | 405 | 0.089% |
-| `LivingArea <= 0` | 161 | 0.035% |
-| Purchase date > close | 92 | 0.020% |
-| Listing date > close | 81 | 0.018% |
-| Outside CA box | 65 | 0.014% |
-| `DaysOnMarket < 0` | 48 | 0.011% |
-| Zero-sentinel coordinate | 44 | 0.010% |
-| Longitude > 0 (sign error) | 34 | 0.007% |
-| `LivingArea > 25k sqft` | 15 | 0.003% |
-| Price < $10k | 9 | 0.002% |
-| YearBuilt implausible | 9 | 0.002% |
-| Price > $100M | 2 | <0.001% |
-| **Any review flag** | **54,126** | **11.88%** |
-| **Hard-invalid (removed in clean view)** | **209** | **0.046%** |
+| No map coordinates (`missing_coords_flag`) | 53,637 | 11.77% |
+| Dates out of order (any kind) | 405 | 0.089% |
+| Size recorded as 0 or negative | 161 | 0.035% |
+| Purchase date after closing date | 92 | 0.020% |
+| Listing date after closing date | 81 | 0.018% |
+| Coordinates outside California | 65 | 0.014% |
+| Negative days on market | 48 | 0.011% |
+| Coordinates recorded as exactly 0 | 44 | 0.010% |
+| Longitude has the wrong sign | 34 | 0.007% |
+| Size over 25,000 sqft | 15 | 0.003% |
+| Price under $10k | 9 | 0.002% |
+| Year built implausible | 9 | 0.002% |
+| Price over $100M | 2 | <0.001% |
+| **Flagged for review (any flag)** | **54,126** | **11.88%** |
+| **Impossible → removed from clean view** | **209** | **0.046%** |
 
-Sold: 209 hard-invalid removed → **455,449-row clean view**. Listings behave the same way (504,466 rows; 304 hard-invalid removed → 504,162 clean; missing coordinates 49,467 / 9.8%). Geo flag counts overlap by design: every positive-longitude row is also outside the CA box.
+Bottom line: only **209** sold rows (0.046%) were bad enough to remove, leaving a **455,449-row clean view**. Listings came out the same way: 304 removed from 504,466, leaving 504,162. (Some geographic counts overlap on purpose — a wrong-sign longitude is, by definition, also outside California.)
 
-**Insights**
-- **Missing geocoordinates are the one real data-quality problem — and they are *not* random.** ~11.8% of sold rows lack lat/long, but the missingness concentrates in **2024 closings (≈28%, vs <1% from 2025 on)**, in **Bay-Area counties** (Santa Clara 35%, San Mateo 30%, Alameda 29%), and skews **~$100K pricier** than rows with coordinates. Any map built on the coordinate subset systematically under-represents 2024, Northern California, and higher-priced homes — use `CountyOrParish`/`City`/`PostalCode` (0% null) for geographic aggregation instead.
-- **The two datasets overlap heavily — never union them.** 427,808 `ListingKey`s (≈94% of sold) appear in *both* files: the listings file contains most closed transactions. Stacking the two would double-count ~428K sales; combine them only via an anti-join on `ListingKey`.
-- **`DaysOnMarket` is a CRMLS system field, not `Close − List`.** Only ~55% of rows have DOM equal to the date difference, which is why DOM<0 (48 rows) and broken timelines (405) disagree — they measure different things. Compute your own durations only on rows where `negative_timeline_flag` is false.
-- **The exotic errors we feared are rare.** The −288 days-on-market, 0- and 17M-sqft living areas, and the 81 close-before-list rows are real — but they total a few hundred rows. Only the **209 hard-invalid** rows (0.046%) are actually removed in the clean view; the rest stay, flagged for review. One honest caveat: the 161 `LivingArea <= 0` removals skew expensive (median ≈$1.77M) — zero there likely means *unrecorded size on real luxury sales*, not fake sales, so the removal trims a sliver of the luxury tail.
-- **No *non-null* `ClosePrice <= 0` occurs** — the suspicious tail is the *low positive* prices (`< $10k`, 9 rows: likely non-arms-length transfers), flagged for review rather than deleted.
-- **Flag, don't delete.** Because `0` is legitimate for days-on-market (same-day sale), bedrooms (land/studio), and baths, and because border coordinates can be real, the script only *removes* the unambiguous numeric errors and *flags* everything else — nothing analytically meaningful is thrown away.
-- **`ContractStatusChangeDate`** (named by the handbook for datetime conversion) was intentionally dropped in the Weeks 2–3 column-reduction as non-dashboard; the three date fields that survived carry all the consistency checks, and the conversion loop is guarded to pick it up automatically if it's ever re-added upstream.
+**What we learned**
+
+- **The one real problem: missing map coordinates — and they're not missing at random.** About 12% of homes have no location point. Almost all of them are **2024 sales** (28% of that year is missing, vs. under 1% afterward), they cluster in **Bay-Area counties** (Santa Clara is 35% missing), and they skew **~$100K more expensive** than homes that do have coordinates. Plain consequence: a map built from this data quietly leaves out 2024, Northern California, and pricier homes. The fix: for anything grouped by geography, use the county/city/zip columns instead — those are 100% filled in.
+- **Don't stack the two datasets.** About 94% of sold homes *also* appear in the listings file (a sold home was once listed — obvious in hindsight). Combining the files naively would count ~428K sales twice.
+- **"Days on market" is not what you'd calculate yourself.** The MLS computes it from its own status events. It matches "close date minus list date" only about half the time. If you need your own duration math, do it on rows without the timeline flag.
+- **The scary errors turned out to be tiny.** The −288 days-on-market, the 17-million-sqft "home," the sales that closed before listing — all real, all flagged, and all together just a few hundred rows out of 455K. One honest note: the removed 0-sqft homes are mostly *expensive* real sales (median ~$1.8M) where the size was simply never entered — so removing them trims a sliver off the luxury end.
+- **Why flag instead of delete?** Because zero is sometimes legitimate: a home *can* sell in 0 days, land *can* have 0 bedrooms. Deleting on simple rules would throw away real data. So the script deletes only the impossible and marks everything else.
+- One handbook field (`ContractStatusChangeDate`) isn't converted because we deliberately dropped it in Weeks 2–3 (it doesn't feed any dashboard). The code will pick it up automatically if it ever comes back.
