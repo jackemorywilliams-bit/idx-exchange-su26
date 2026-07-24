@@ -178,6 +178,17 @@ def summarize(df, label):
     n_dup = int(df["ListingKey"].duplicated().sum())
     print(f"duplicate ListingKey rows: {n_dup}")
 
+    # Cohort-comparability diagnostic: some teammates define negative_timeline as the
+    # FULLY reversed chain (Listing > Purchase AND Purchase > Close). Ours flags ANY
+    # out-of-order pair (broader). Print the strict count so numbers can be compared.
+    if all(c in df.columns for c in ("ListingContractDate", "PurchaseContractDate",
+                                     "CloseDate")):
+        strict = int(((df["ListingContractDate"] > df["PurchaseContractDate"])
+                      & (df["PurchaseContractDate"] > df["CloseDate"])).sum())
+        print(f"fully-reversed timeline (strict AND-chain definition): {strict} "
+              f"(vs {int(df['negative_timeline_flag'].sum())} under our any-violation "
+              f"definition)")
+
     # Missingness-bias audit: coordinate nulls are NOT random -- show where they
     # concentrate so map-based analyses know their subset is biased (MNAR).
     print("\n--- coordinate-missingness bias (missing_coords_flag rate) ---")
@@ -221,6 +232,12 @@ def clean(prefix, in_path):
           f"not removed: {int(clean_view['any_review_flag'].sum()):,})")
     assert len(df) == EXPECTED_ROWS[prefix], "flagged output must keep all rows"
     assert len(clean_view) == len(df) - n_hard, "clean-view row math mismatch"
+
+    # Save flags as 0/1 integers (not True/False): friendlier in Tableau and
+    # consistent with the rest of the cohort's files.
+    flag_cols = [c for c in df.columns if c.endswith("_flag")]
+    df[flag_cols] = df[flag_cols].astype("int8")
+    clean_view[flag_cols] = clean_view[flag_cols].astype("int8")
 
     flagged_out = os.path.join(
         OUTPUT_DIR, f"Week 4-5 _ Deliverable _ {prefix} Residential Cleaned Flagged.csv")
@@ -271,6 +288,10 @@ if __name__ == "__main__":
 #     the two files; anti-join on ListingKey when combining.
 #   - DaysOnMarket is a CRMLS system field (= date-diff on only ~55% of rows).
 #   - Duplicate ListingKeys: 2 (sold) / 6 (listings) -- reported, not removed.
+#   - Definition comparability: fully-reversed timeline (strict AND-chain, as some
+#     teammates define it) = 1 row vs 405 under our any-violation definition --
+#     the cohort should agree on one definition before comparing counts.
+#   - Flags are saved as 0/1 integers (Tableau-friendly, cohort-consistent).
 #   - The 161 LivingArea<=0 removals skew expensive (median ~$1.77M): zero likely
 #     means unrecorded size, an acknowledged trade-off of the hard-invalid rule.
 # =============================================================================

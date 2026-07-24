@@ -211,7 +211,7 @@ The flags fall into four groups:
 | Bad map coordinates | Missing, zeroed, or outside California. | longitude with the wrong sign |
 | Worth a second look | Real-looking but extreme values, kept but flagged. | price under $10k or over $100M, home over 25,000 sqft |
 
-Two details worth knowing: a row with a *missing* date is never flagged (it can't be checked, so it's "unaudited," not "clean"), and the review thresholds are deliberately round numbers ($10k, $100M, 25k sqft) so anyone can understand and challenge them.
+Three details worth knowing: a row with a *missing* date is never flagged (it can't be checked, so it's "unaudited," not "clean"); the review thresholds are deliberately round numbers ($10k, $100M, 25k sqft) so anyone can understand and challenge them; and flags are saved as **0/1 integers** rather than True/False — easier to use in Tableau and consistent with the team's other files. The "dates out of order" flag counts *any* out-of-order pair (405 rows); the stricter "entire timeline reversed" reading catches just 1 row — both counts are printed so results stay comparable across the team.
 
 > **"Clean" here means one specific thing:** free of impossible numbers. Rows with date or map issues are still in the clean view, carrying their flags — filter on a flag column if you want a stricter cut.
 
