@@ -32,6 +32,8 @@ week2-3/
 week4-5/
   data_cleaning.py       # type dates/numerics, flag quality issues, emit flagged + clean-view CSVs
   make_figures.py        # README figure (data-quality flag prevalence)
+week6/
+  feature_engineering.py # engineered market metrics + unified school-district spatial join → enriched CSV
 ```
 
 Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
@@ -247,3 +249,31 @@ Bottom line: only **209** sold rows (0.046%) were bad enough to remove, leaving 
 - **The scary errors turned out to be tiny.** The −288 days-on-market, the 17-million-sqft "home," the sales that closed before listing — all real, all flagged, and all together just a few hundred rows out of 455K. One honest note: the removed 0-sqft homes are mostly *expensive* real sales (median ~$1.8M) where the size was simply never entered — so removing them trims a sliver off the luxury end.
 - **Why flag instead of delete?** Because zero is sometimes legitimate: a home *can* sell in 0 days, land *can* have 0 bedrooms. Deleting on simple rules would throw away real data. So the script deletes only the impossible and marks everything else.
 - One handbook field (`ContractStatusChangeDate`) isn't converted because we deliberately dropped it in Weeks 2–3 (it doesn't feed any dashboard). The code will pick it up automatically if it ever comes back.
+
+### Week 6 — Feature engineering & market metrics
+
+**What this week does, in one sentence:** build the calculated fields the dashboards will run on — price ratios, price per square foot, time-on-market breakdowns, and each home's school district — and save one enriched dataset that the rest of the project uses.
+
+**`week6/feature_engineering.py`** starts from the Weeks 4–5 clean view (455,449 sold homes) and adds ten new columns:
+
+| New column | What it tells you |
+|---|---|
+| `price_ratio` / `close_to_original_list_ratio` | Sale price ÷ original asking price — did it sell over or under ask? (The handbook defines both names with the same formula, so both are provided from one calculation.) |
+| `price_per_sqft` | Sale price ÷ living area — comparable pricing across home sizes |
+| `Year`, `Month`, `YrMo` | The sale month in dashboard-friendly form |
+| `listing_to_contract_days` | How long from hitting the market to an accepted offer |
+| `contract_to_close_days` | How long from accepted offer to keys-in-hand |
+| `DistrictName` | Which **unified school district** the home sits in |
+| `district_match_status` | Why a home has no district: no coordinates, bad coordinates, or a real location served by separate elementary/high districts |
+
+**The school-district join, in plain terms:** we downloaded California's official 2025–26 school-district boundary map (936 districts), kept the 345 *unified* ones per the program's instructions, converted each home's latitude/longitude into a map point, and checked which district shape contains it. Results: **307,683 homes (67.6%) matched** a unified district; 20.6% sit in areas served by separate elementary + high districts (expected geography, not an error); 11.8% have no coordinates (the known gap from Weeks 4–5).
+
+The join was verified four ways: known city→district pairs all check out (Irvine → Irvine Unified, San Diego → San Diego Unified, etc.); a **negative control** — Cupertino, which has *no* unified district — produced zero false matches; the match rate (76.6% of homes with coordinates) lands in the expected band; and the biggest district by sales is LA Unified, as it must be.
+
+**Findings**
+- **Riverside County has the best district coverage in the dataset** — 84.3% of its sales matched a district and only 5.6% lack coordinates — which makes it the strongest candidate geography for the final market-intelligence report.
+- **Because of the known coordinate gap, school district is best used as a dashboard *filter* with a coverage note, not as its own map** — the missing 12% is concentrated in 2024/Bay Area/pricier homes, so district-level stats would quietly undercount exactly those.
+- Market snapshot from the segment tables: single-family homes median **$882K** and 17 days on market; condos **$625K** and 24 days; county medians run from **$535K** (San Bernardino) to **$1.65M** (San Mateo).
+- 405 homes have negative timeline durations — kept, because they carry the Weeks 4–5 timeline flag; and ~900 have no price ratio because the original list price was never recorded.
+
+Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` — 455,449 rows × 61 columns, the dataset every later week builds on.
