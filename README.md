@@ -252,14 +252,15 @@ Bottom line: only **209** sold rows (0.046%) were bad enough to remove, leaving 
 
 ### Week 6 — Feature engineering & market metrics
 
-**What this week does, in one sentence:** build the calculated fields the dashboards will run on — price ratios, price per square foot, time-on-market breakdowns, and each home's school district — and save one enriched dataset that the rest of the project uses.
+**What this week does, in one sentence:** build the calculated fields the dashboards will run on — price ratios, price per square foot, time-on-market breakdowns, and each home's school district — and save enriched datasets that the rest of the project uses.
 
-**`week6/feature_engineering.py`** starts from the Weeks 4–5 clean view (455,449 sold homes) and adds ten new columns:
+**`week6/feature_engineering.py`** starts from the Weeks 4–5 clean views (455,449 sold homes + 504,162 listings) and adds eleven new columns to **both** datasets:
 
 | New column | What it tells you |
 |---|---|
 | `price_ratio` / `close_to_original_list_ratio` | Sale price ÷ original asking price — did it sell over or under ask? (The handbook defines both names with the same formula, so both are provided from one calculation.) |
 | `price_per_sqft` | Sale price ÷ living area — comparable pricing across home sizes |
+| `days_on_market` | The raw MLS days-on-market field under the metric's standard name |
 | `Year`, `Month`, `YrMo` | The sale month in dashboard-friendly form |
 | `listing_to_contract_days` | How long from hitting the market to an accepted offer |
 | `contract_to_close_days` | How long from accepted offer to keys-in-hand |
@@ -274,6 +275,8 @@ The join was verified four ways: known city→district pairs all check out (Irvi
 - **Riverside County has the best district coverage in the dataset** — 84.3% of its sales matched a district and only 5.6% lack coordinates — which makes it the strongest candidate geography for the final market-intelligence report.
 - **Because of the known coordinate gap, school district is best used as a dashboard *filter* with a coverage note, not as its own map** — the missing 12% is concentrated in 2024/Bay Area/pricier homes, so district-level stats would quietly undercount exactly those.
 - Market snapshot from the segment tables: single-family homes median **$882K** and 17 days on market; condos **$625K** and 24 days; county medians run from **$535K** (San Bernardino) to **$1.65M** (San Mateo).
+- The buyer-side segment table (competitive intelligence) surfaces a data gotcha for Week 9: the #3 "buyer office" is **`NONMEMBER MRML`** — a placeholder for purchases with no member buyer agent, not a real brokerage — so office rankings must exclude these sentinels.
 - 405 homes have negative timeline durations — kept, because they carry the Weeks 4–5 timeline flag; and ~900 have no price ratio because the original list price was never recorded.
+- **Cross-checked against teammates' Week 6 results:** buyer-office counts agree to within ~0.1%, and a teammate's single "unmatched district" total (147,693) equals our three separated buckets summed — same data, ours just labels *why* each row didn't match.
 
-Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` — 455,449 rows × 61 columns, the dataset every later week builds on.
+Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` (455,449 × 62) and `Week 6 _ Deliverable _ Listing Residential Enriched.csv` (504,162 × 60) — the datasets every later week builds on.
