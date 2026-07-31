@@ -174,6 +174,7 @@ def segment_summaries(df):
     and the same top-10 rows -- the file on disk is exactly the table on screen.
     """
     def seg(by):
+        name = by if isinstance(by, str) else " x ".join(by)
         g = df.groupby(by).agg(
             n_sales=("ClosePrice", "size"),
             median_close=("ClosePrice", "median"),
@@ -181,9 +182,9 @@ def segment_summaries(df):
             median_price_ratio=("price_ratio", "median"),
             median_dom=("days_on_market", "median"),
         ).sort_values("n_sales", ascending=False).head(10).round(2)
-        out = os.path.join(OUTPUT_DIR, f"Week 6 _ Segment _ {by}.csv")
+        out = os.path.join(OUTPUT_DIR, f"Week 6 _ Segment _ {name}.csv")
         g.to_csv(out)
-        print(f"\n-- by {by} (top 10) -- saved -> {os.path.basename(out)}")
+        print(f"\n-- by {name} (top 10) -- saved -> {os.path.basename(out)}")
         print(g.to_string())
 
     print("\n=== SEGMENT SUMMARIES (sold, medians) ===")
@@ -192,6 +193,10 @@ def segment_summaries(df):
     for dim in ("PropertySubType", "CountyOrParish", "MLSAreaMajor",
                 "ListOfficeName", "BuyerOfficeName"):
         seg(dim)
+    # The handbook words this segment as a pair ("CountyOrParish and MLSAreaMajor"),
+    # so the combined view is provided too. (PropertyType x PropertySubType would be
+    # identical to the PropertySubType table -- PropertyType is constant.)
+    seg(["CountyOrParish", "MLSAreaMajor"])
     print("\ncaveat: office totals are split across variant spellings (e.g. eXp, "
           "Redfin each appear twice); normalization is deferred to the Week 9 "
           "top-100 build (see metric dictionary). BuyerOfficeName also contains "
@@ -243,6 +248,9 @@ if __name__ == "__main__":
 #   Coldwell Banker 16,044 / NONMEMBER MRML 10,031 (sentinel -- exclude before
 #   ranking real offices). Each top-10 table is also saved as
 #   "Week 6 _ Segment _ <Dimension>.csv" -- the file is exactly the printed table.
+#   Pair segment (handbook wording "CountyOrParish and MLSAreaMajor"): top combo
+#   Riverside x Southwest Riverside County 22,648 sales / $587K median -- the
+#   single biggest county-area market in the data.
 # CROSS-VALIDATION vs teammates: buyer-office counts match bclyman29 to within
 #   ~0.1% (NONMEMBER 10,031 identical); their conflated "unmatched" district
 #   count (147,693) equals our three separated non-matched buckets summed.
