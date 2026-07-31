@@ -269,6 +269,8 @@ Bottom line: only **209** sold rows (0.046%) were bad enough to remove, leaving 
 
 **The school-district join, in plain terms:** we downloaded California's official 2025–26 school-district boundary map (936 districts), kept the 345 *unified* ones per the program's instructions, converted each home's latitude/longitude into a map point, and checked which district shape contains it. Results: **307,683 homes (67.6%) matched** a unified district; 20.6% sit in areas served by separate elementary + high districts (expected geography, not an error); 11.8% have no coordinates (the known gap from Weeks 4–5).
 
+![School-district match coverage for sold and listings — matched, no unified district, missing coordinates, invalid coordinates](week6/figures/district_match_coverage.png)
+
 The join was verified four ways: known city→district pairs all check out (Irvine → Irvine Unified, San Diego → San Diego Unified, etc.); a **negative control** — Cupertino, which has *no* unified district — produced zero false matches; the match rate (76.6% of homes with coordinates) lands in the expected band; and the biggest district by sales is LA Unified, as it must be.
 
 **Findings**
