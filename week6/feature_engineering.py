@@ -168,30 +168,30 @@ def validate_join(df):
 
 
 def segment_summaries(df):
-    """Median-based segment tables on SOLD (medians: extremes uncapped until Week 7)."""
-    def seg(by, top=None):
+    """Median-based segment tables on SOLD (medians: extremes uncapped until Week 7).
+
+    Each table is PRINTED for the check-in and SAVED as a CSV with the same name
+    and the same top-10 rows -- the file on disk is exactly the table on screen.
+    """
+    def seg(by):
         g = df.groupby(by).agg(
             n_sales=("ClosePrice", "size"),
             median_close=("ClosePrice", "median"),
             median_ppsf=("price_per_sqft", "median"),
             median_price_ratio=("price_ratio", "median"),
             median_dom=("days_on_market", "median"),
-        ).sort_values("n_sales", ascending=False)
-        return g.head(top) if top else g
+        ).sort_values("n_sales", ascending=False).head(10).round(2)
+        out = os.path.join(OUTPUT_DIR, f"Week 6 _ Segment _ {by}.csv")
+        g.to_csv(out)
+        print(f"\n-- by {by} (top 10) -- saved -> {os.path.basename(out)}")
+        print(g.to_string())
 
     print("\n=== SEGMENT SUMMARIES (sold, medians) ===")
     print("(PropertyType is 100% 'Residential' post-filter, so segmentation uses "
           "PropertySubType.)")
-    print("\n-- by PropertySubType (top 10) --")
-    print(seg("PropertySubType", 10).round(2).to_string())
-    print("\n-- by CountyOrParish (top 10) --")
-    print(seg("CountyOrParish", 10).round(2).to_string())
-    print("\n-- by MLSAreaMajor (top 10) --")
-    print(seg("MLSAreaMajor", 10).round(2).to_string())
-    print("\n-- by ListOfficeName (top 10 by volume) --")
-    print(seg("ListOfficeName", 10).round(2).to_string())
-    print("\n-- by BuyerOfficeName (top 10 by volume, competitive intelligence) --")
-    print(seg("BuyerOfficeName", 10).round(2).to_string())
+    for dim in ("PropertySubType", "CountyOrParish", "MLSAreaMajor",
+                "ListOfficeName", "BuyerOfficeName"):
+        seg(dim)
     print("\ncaveat: office totals are split across variant spellings (e.g. eXp, "
           "Redfin each appear twice); normalization is deferred to the Week 9 "
           "top-100 build (see metric dictionary). BuyerOfficeName also contains "
@@ -241,7 +241,8 @@ if __name__ == "__main__":
 # SEGMENTS (sold): SFR median $882K/17d | Condo $625K/24d; counties $535K (San
 #   Bernardino) .. $1.65M (San Mateo); top buyer offices Compass 29,804 /
 #   Coldwell Banker 16,044 / NONMEMBER MRML 10,031 (sentinel -- exclude before
-#   ranking real offices).
+#   ranking real offices). Each top-10 table is also saved as
+#   "Week 6 _ Segment _ <Dimension>.csv" -- the file is exactly the printed table.
 # CROSS-VALIDATION vs teammates: buyer-office counts match bclyman29 to within
 #   ~0.1% (NONMEMBER 10,031 identical); their conflated "unmatched" district
 #   count (147,693) equals our three separated non-matched buckets summed.
