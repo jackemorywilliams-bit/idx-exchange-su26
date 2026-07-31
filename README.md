@@ -273,7 +273,16 @@ Bottom line: only **209** sold rows (0.046%) were bad enough to remove, leaving 
 
 The join was verified four ways: known city→district pairs all check out (Irvine → Irvine Unified, San Diego → San Diego Unified, etc.); a **negative control** — Cupertino, which has *no* unified district — produced zero false matches; the match rate (76.6% of homes with coordinates) lands in the expected band; and the biggest district by sales is LA Unified, as it must be.
 
-**Findings**
+**What the new columns found**
+
+![Findings from the Week 6 engineered columns — sale vs ask split, sale timeline anatomy, price per sqft by county, sale-to-ask ratio by county](week6/figures/new_column_findings.png)
+
+- **The typical home closes at 99.5% of its original asking price** — but that near-1.00 median hides a split market: 37% close above ask, 51% below.
+- **A typical sale takes ~54 days door to door**: 25 days to land an offer + 29 days of escrow. (The MLS's own "days on market" field says 19 — it measures active-marketing time under different rules, which is exactly why we documented both.)
+- **The coast costs 3× the Inland Empire per square foot** — $1,036 (San Mateo) vs $321 (Riverside) — and the negotiation dynamics flip with it: Bay Area counties close *above* ask (Santa Clara 1.018), Inland Empire counties close *below* (Riverside 0.986).
+- **Condos cost more per square foot than houses** ($562 vs $527) despite being cheaper overall — you pay a density premium for less space.
+
+**Other findings**
 - **Riverside County has the best district coverage in the dataset** — 84.3% of its sales matched a district and only 5.6% lack coordinates — which makes it the strongest candidate geography for the final market-intelligence report.
 - **Because of the known coordinate gap, school district is best used as a dashboard *filter* with a coverage note, not as its own map** — the missing 12% is concentrated in 2024/Bay Area/pricier homes, so district-level stats would quietly undercount exactly those.
 - Market snapshot from the segment tables: single-family homes median **$882K** and 17 days on market; condos **$625K** and 24 days; county medians run from **$535K** (San Bernardino) to **$1.65M** (San Mateo).
