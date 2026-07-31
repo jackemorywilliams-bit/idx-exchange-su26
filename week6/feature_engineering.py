@@ -255,3 +255,103 @@ if __name__ == "__main__":
 #   ~0.1% (NONMEMBER 10,031 identical); their conflated "unmatched" district
 #   count (147,693) equals our three separated non-matched buckets summed.
 # =============================================================================
+
+# =============================================================================
+# OBSERVED OUTPUT -- first 10 rows of each table, verbatim from the run
+# -----------------------------------------------------------------------------
+# --- Engineered metrics sample (Sold) ---
+#  ClosePrice  OriginalListPrice  price_ratio  price_per_sqft    YrMo  listing_to_contract_days  contract_to_close_days  days_on_market
+#   5000000.0          5000000.0         1.00         1148.37 2024-01                         0                      63               0
+#    858000.0                NaN          NaN          430.08 2024-01                         0                       0               0
+#   1890500.0          1890500.0         1.00          591.89 2024-01                         0                       0               0
+#   2100000.0          2100000.0         1.00          562.10 2024-01                         0                      48               0
+#   2340000.0                NaN          NaN          958.23 2024-01                         0                       0               0
+#   1485000.0          1550000.0         0.96          927.55 2024-01                         1                      21               0
+#   1130000.0           999000.0         1.13          529.03 2024-01                         1                      17               1
+#   1060000.0          1050000.0         1.01          552.95 2024-01                        34                       6              34
+# null price_ratio: 937 | null price_per_sqft: 272
+#
+# -- by PropertySubType (top 10) -- saved -> Week 6 _ Segment _ PropertySubType.csv
+#                        n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# PropertySubType                                                                          
+# SingleFamilyResidence   340154      882000.0       526.94                1.00        17.0
+# Condominium              75830      625000.0       562.17                0.99        24.0
+# Townhouse                26621      795000.0       554.49                1.00        18.0
+# ManufacturedOnLand        5966      322000.0       225.69                0.97        31.0
+# Duplex                    2568      910000.0       541.25                0.98        21.0
+# StockCooperative          1793      360000.0       396.53                0.99        21.0
+# Cabin                      524      240500.0       287.76                0.92        47.5
+# Triplex                    381     1135000.0       466.51                0.97        29.0
+# MixedUse                   228      700000.0       449.81                0.93        52.0
+# Quadruplex                 159     1275000.0       376.95                0.95        34.0
+#
+# -- by CountyOrParish (top 10) -- saved -> Week 6 _ Segment _ CountyOrParish.csv
+#                 n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# CountyOrParish                                                                    
+# Los Angeles      113426      900000.0       608.47                1.00        19.0
+# Riverside         64221      600000.0       320.73                0.99        30.0
+# San Diego         58531      895000.0       589.30                0.99        15.0
+# Orange            51112     1180000.0       673.50                0.99        14.0
+# San Bernardino    42636      534900.0       331.88                0.99        25.0
+# Alameda           21474     1125000.0       697.28                1.02        14.0
+# Contra Costa      21382      819000.0       519.11                1.00        14.0
+# Santa Clara       16635     1540000.0       944.68                1.02        10.0
+# Ventura           14445      865000.0       516.55                0.99        28.0
+# San Mateo          6876     1650000.0      1035.80                1.01        12.0
+#
+# -- by MLSAreaMajor (top 10) -- saved -> Week 6 _ Segment _ MLSAreaMajor.csv
+#                                       n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# MLSAreaMajor                                                                                            
+# 699 - Not Defined                       41783     1150000.0       743.56                1.00        13.0
+# SRCAR - Southwest Riverside County      22656      587000.0       293.16                1.00        24.0
+# 252 - Riverside                          5884      656000.0       378.04                1.00        21.0
+# 248 - Corona                             3724      757250.0       396.37                0.99        22.0
+# LAC - Lancaster                          3448      475000.0       270.83                1.00        25.0
+# 263 - Banning/Beaumont/Cherry Valley     3263      499999.0       259.92                0.99        30.0
+# VIC - Victorville                        3243      438000.0       237.96                1.00        24.0
+# 274 - San Bernardino                     3176      500000.0       352.92                1.00        21.0
+# 259 - Moreno Valley                      2942      555000.0       311.99                1.00        18.0
+# 686 - Ontario                            2925      651990.0       416.67                1.00        20.0
+#
+# -- by ListOfficeName (top 10) -- saved -> Week 6 _ Segment _ ListOfficeName.csv
+#                                                        n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# ListOfficeName                                                                                                           
+# Compass                                                  31822     1330000.0       748.13                1.00        14.0
+# Coldwell Banker Realty                                   19936     1163000.0       683.08                0.99        16.0
+# Keller Williams Realty                                    9013      870000.0       539.48                1.00        15.0
+# First Team Real Estate                                    6342      960000.0       608.00                1.00        13.0
+# Berkshire Hathaway HomeServices California Properties     5918      950000.0       598.31                0.98        23.0
+# Real Broker                                               5436      845000.0       556.18                1.00        15.0
+# eXp Realty of California Inc                              5286      780000.0       524.93                1.00        19.0
+# Intero Real Estate Services                               4253     1312000.0       816.58                1.01        12.0
+# eXp Realty of California, Inc.                            4045      755000.0       492.99                1.00        13.0
+# Equity Union                                              3963      850000.0       474.77                0.98        28.0
+#
+# -- by BuyerOfficeName (top 10) -- saved -> Week 6 _ Segment _ BuyerOfficeName.csv
+#                                                        n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# BuyerOfficeName                                                                                                          
+# Compass                                                  29804     1310167.5       744.87                1.00        15.0
+# Coldwell Banker Realty                                   16044     1165000.0       678.81                0.99        16.0
+# NONMEMBER MRML                                           10031      500000.0       288.64                0.99        26.0
+# Keller Williams Realty                                    7133      834000.0       532.11                1.00        17.0
+# Real Broker                                               7043      800000.0       542.61                1.00        18.0
+# eXp Realty of California Inc                              5753      825000.0       566.16                1.00        19.0
+# First Team Real Estate                                    5753      899900.0       595.91                1.00        14.0
+# eXp Realty of California, Inc.                            5278      725000.0       494.08                1.00        18.0
+# Berkshire Hathaway HomeServices California Properties     4605      982000.0       609.32                0.99        21.0
+# Redfin Corporation                                        3713      840000.0       540.47                0.99        20.0
+#
+# -- by CountyOrParish x MLSAreaMajor (top 10) -- saved -> Week 6 _ Segment _ CountyOrParish x MLSAreaMajor.csv
+#                                                      n_sales  median_close  median_ppsf  median_price_ratio  median_dom
+# CountyOrParish MLSAreaMajor                                                                                            
+# Riverside      SRCAR - Southwest Riverside County      22648      587028.0       293.21                1.00        24.0
+# Santa Clara    699 - Not Defined                       15142     1552750.0       953.64                1.02        10.0
+# San Mateo      699 - Not Defined                        6367     1700000.0      1048.61                1.01        12.0
+# Riverside      252 - Riverside                          5884      656000.0       378.04                1.00        21.0
+# Monterey       699 - Not Defined                        4022      905000.0       591.88                0.98        19.0
+# Riverside      248 - Corona                             3723      757500.0       396.37                0.99        22.0
+# Los Angeles    LAC - Lancaster                          3448      475000.0       270.83                1.00        25.0
+# Riverside      263 - Banning/Beaumont/Cherry Valley     3263      499999.0       259.92                0.99        30.0
+# San Bernardino VIC - Victorville                        3243      438000.0       237.96                1.00        24.0
+#                274 - San Bernardino                     3174      500000.0       353.02                1.00        21.0
+# =============================================================================
