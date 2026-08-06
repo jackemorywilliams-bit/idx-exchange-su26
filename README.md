@@ -34,6 +34,9 @@ week4-5/
   make_figures.py        # README figure (data-quality flag prevalence)
 week6/
   feature_engineering.py # engineered market metrics + unified school-district spatial join → enriched CSV
+  make_figures.py        # README figures (district coverage, new-column findings)
+week7/
+  iqr_outlier_filtering.py # IQR outlier flags on price/size/DOM → flagged + filtered CSVs
 ```
 
 Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
@@ -291,3 +294,29 @@ The join was verified four ways: known city→district pairs all check out (Irvi
 - **Cross-checked against teammates' Week 6 results:** buyer-office counts agree to within ~0.1%, and a teammate's single "unmatched district" total (147,693) equals our three separated buckets summed — same data, ours just labels *why* each row didn't match.
 
 Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` (455,449 × 62) and `Week 6 _ Deliverable _ Listing Residential Enriched.csv` (504,162 × 60) — the datasets every later week builds on — plus six small `Week 6 _ Segment _ <Dimension>.csv` files, one per summary table (each is exactly the top-10 table the script prints, saved for easy review in Excel). The segments cover every handbook dimension — PropertySubType, CountyOrParish, MLSAreaMajor, both office sides, and the combined **CountyOrParish × MLSAreaMajor** pair, whose top market is Southwest Riverside County (22,648 sales, $587K median).
+
+### Week 7 — Outlier detection & data quality (IQR)
+
+**What this week does, in one sentence:** find the statistical extremes in price, size, and time-on-market using the standard IQR method, mark them with flags, and produce a second "trend-friendly" version of each dataset with those extremes set aside — without deleting anything from the originals.
+
+**`week7/iqr_outlier_filtering.py`** applies the textbook IQR rule to the three handbook fields — `ClosePrice`, `LivingArea`, `DaysOnMarket`. For each: find the 25th and 75th percentiles, take the gap between them (the IQR), and flag anything more than 1.5× that gap outside. Every row gets 0/1 flags (one per field + a combined one), and two files are saved per dataset:
+
+- **IQR Flagged** — every row kept, flags attached (the originals are never touched);
+- **IQR Filtered** — the same data minus the flagged rows, **for general market-trend charts only**.
+
+**The before/after comparison (sold):**
+
+| | Rows | Median price | *Mean* price | Median sqft | Median DOM |
+|---|--:|--:|--:|--:|--:|
+| Before (all rows) | 455,449 | $815,000 | $1,123,321 | 1,643 | 19 |
+| After (filtered) | 385,003 | $780,000 | $887,946 | 1,570 | 16 |
+
+**What we learned**
+- **All three fences are one-sided.** Housing data is right-skewed, so the "too low" thresholds go negative and flag nothing — only the luxury tail (>$2.34M), oversized homes (>3,680 sqft), and slow sales (>110 days) get flagged: **15.5%** of sold rows, **15.2%** of listings.
+- **The median barely moves (−4%) but the mean collapses (−21%).** That's the whole lesson of this week in one line: a handful of $10M+ sales were dragging the average up by $235K. Medians were already telling the truth; means needed the filter.
+- **The filter doesn't skew geography.** County flag rates are nearly flat (Riverside 15.4%, LA 16.4%, Orange 16.9%) — so trend charts built on the filtered file represent every county fairly.
+- **But it does bite the investor tier via one fence:** in sub-$600K stock only the *days-on-market* fence fires (10.8%), and the slow-sale tail it removes is 40% sub-$600K. That's exactly the "stale listing" inventory investors buy — which is why **every investor/capstone metric stays on the flagged (pre-IQR) file**, a rule now printed by the script itself.
+- Listings with no sale price (16% — still on the market) can't be price outliers; they pass through and stay.
+- One honest limitation, noted not fixed: fences are computed statewide. A $2.5M home is an outlier in Riverside but ordinary in parts of San Mateo — per-county fences would be the more rigorous upgrade, deferred to keep results comparable across the team.
+
+Output: four CSVs — `Week 7 _ Deliverable _ {Sold, Listing} Residential IQR {Flagged, Filtered}.csv`. The script ends with the full observed output embedded as comments.
