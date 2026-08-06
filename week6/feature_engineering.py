@@ -253,7 +253,8 @@ if __name__ == "__main__":
 #   single biggest county-area market in the data.
 # CROSS-VALIDATION vs teammates: buyer-office counts match bclyman29 to within
 #   ~0.1% (NONMEMBER 10,031 identical); their conflated "unmatched" district
-#   count (147,693) equals our three separated non-matched buckets summed.
+#   count (147,693) matches our three separated non-matched buckets summed (147,766)
+#   within 0.05% -- their input is 169 rows smaller than ours.
 # =============================================================================
 
 # =============================================================================

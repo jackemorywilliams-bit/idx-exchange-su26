@@ -68,6 +68,16 @@ def read_any(path):
         return pd.read_csv(path, low_memory=False, encoding="cp1252")
 
 
+PREVIEW_COLS = ["ClosePrice", "LivingArea", "DaysOnMarket", "YrMo", "CountyOrParish"]
+
+
+def preview(df, label, extra_cols=()):
+    """Small .head() table at each stage so the run is easy to talk through."""
+    cols = PREVIEW_COLS + [c for c in extra_cols if c in df.columns]
+    print(f"\n-- preview: {label} (first 5 rows) --")
+    print(df[cols].head(5).to_string(index=False))
+
+
 def iqr_flags(df, label):
     """Percentile evidence + IQR fences + one 0/1 flag per field + rollup."""
     for f in IQR_FIELDS:
@@ -164,9 +174,14 @@ def main():
             f"{prefix} rows {len(df):,} != expected {EXPECTED_ROWS[prefix]:,}")
         n_cols_in = df.shape[1]
         print(f"loaded Week 6 enriched: {len(df):,} rows x {n_cols_in} cols")
+        preview(df, f"{prefix} input as loaded")
 
         df = iqr_flags(df, prefix)
+        flag_cols = list(FLAG_OF.values()) + ["any_iqr_outlier_flag"]
+        preview(df[df["any_iqr_outlier_flag"] == 1], f"{prefix} flagged examples",
+                flag_cols)
         filtered = df[df["any_iqr_outlier_flag"] == 0].copy()
+        preview(filtered, f"{prefix} filtered result", flag_cols)
 
         written_comparison(df, filtered, prefix)
         if prefix == "Sold":
@@ -221,11 +236,19 @@ if __name__ == "__main__":
 # =============================================================================
 
 # =============================================================================
-# OBSERVED OUTPUT -- verbatim from the run (all printed tables)
+# OBSERVED OUTPUT -- verbatim from the run (all printed tables + previews)
 # -----------------------------------------------------------------------------
 # 
 # ########## SOLD ##########
 # loaded Week 6 enriched: 455,449 rows x 62 cols
+# 
+# -- preview: Sold input as loaded (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo  CountyOrParish
+#   5000000.0      4354.0             0 2024-01    Contra Costa
+#    858000.0      1995.0             0 2024-01       Riverside
+#   1890500.0      3194.0             0 2024-01     Los Angeles
+#   2100000.0      3736.0             0 2024-01 San Luis Obispo
+#   2340000.0      2442.0             0 2024-01     Santa Clara
 # 
 # === IQR FENCES & PERCENTILES (Sold) ===
 # 
@@ -245,6 +268,22 @@ if __name__ == "__main__":
 #   flagged: below=0  above=33,960  total=33,960 (7.46% of rows)
 # 
 # any_iqr_outlier_flag: 70,446 rows (15.47%)
+# 
+# -- preview: Sold flagged examples (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo  CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
+#   5000000.0      4354.0             0 2024-01    Contra Costa                            1                            1                              0                     1
+#   2100000.0      3736.0             0 2024-01 San Luis Obispo                            0                            1                              0                     1
+#   1928800.0      3799.0             0 2024-01         Alameda                            0                            1                              0                     1
+#   2460000.0      1936.0             0 2024-01     Santa Clara                            1                            0                              0                     1
+#   9635000.0      5410.0            25 2024-01     Los Angeles                            1                            1                              0                     1
+# 
+# -- preview: Sold filtered result (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
+#    858000.0      1995.0             0 2024-01      Riverside                            0                            0                              0                     0
+#   1890500.0      3194.0             0 2024-01    Los Angeles                            0                            0                              0                     0
+#   2340000.0      2442.0             0 2024-01    Santa Clara                            0                            0                              0                     0
+#   1485000.0      1601.0             0 2024-01      San Diego                            0                            0                              0                     0
+#   1130000.0      2136.0             1 2024-01    Los Angeles                            0                            0                              0                     0
 # 
 # === WRITTEN COMPARISON (Sold): before vs after IQR filtering ===
 #                               rows  median_ClosePrice  mean_ClosePrice  median_LivingArea  median_DOM
@@ -283,6 +322,14 @@ if __name__ == "__main__":
 # ########## LISTING ##########
 # loaded Week 6 enriched: 504,162 rows x 60 cols
 # 
+# -- preview: Listing input as loaded (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo CountyOrParish
+#         NaN      2338.0            36     NaN      Riverside
+#    320000.0      1212.0             0 2026-05      Riverside
+#    160000.0      1008.0            10 2026-04           Lake
+#   2000000.0      2573.0            98 2026-04    Los Angeles
+#   3200000.0      1381.0             0 2025-05      San Diego
+# 
 # === IQR FENCES & PERCENTILES (Listing) ===
 # 
 # ClosePrice: n=421,386 (non-null)  min=525  max=110,000,000
@@ -301,6 +348,22 @@ if __name__ == "__main__":
 #   flagged: below=0  above=38,811  total=38,811 (7.70% of rows)
 # 
 # any_iqr_outlier_flag: 76,694 rows (15.21%)
+# 
+# -- preview: Listing flagged examples (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
+#   3200000.0      1381.0             0 2025-05      San Diego                            1                            0                              0                     1
+#    299999.0      1310.0           159 2025-10      San Diego                            0                            0                              1                     1
+#   4924000.0      3413.0             0 2025-02         Orange                            1                            0                              0                     1
+#  10000000.0      5440.0             0 2025-01         Orange                            1                            1                              0                     1
+#   5200000.0      3743.0             0 2025-04      Riverside                            1                            0                              0                     1
+# 
+# -- preview: Listing filtered result (first 5 rows) --
+#  ClosePrice  LivingArea  DaysOnMarket    YrMo CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
+#         NaN      2338.0            36     NaN      Riverside                            0                            0                              0                     0
+#    320000.0      1212.0             0 2026-05      Riverside                            0                            0                              0                     0
+#    160000.0      1008.0            10 2026-04           Lake                            0                            0                              0                     0
+#   2000000.0      2573.0            98 2026-04    Los Angeles                            0                            0                              0                     0
+#   1780000.0      3200.0            46 2025-06      San Diego                            0                            0                              0                     0
 # 
 # === WRITTEN COMPARISON (Listing): before vs after IQR filtering ===
 #                               rows  median_ClosePrice  mean_ClosePrice  median_LivingArea  median_DOM

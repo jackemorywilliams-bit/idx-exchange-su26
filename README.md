@@ -311,6 +311,10 @@ Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` (455,449 × 62) a
 | Before (all rows) | 455,449 | $815,000 | $1,123,321 | 1,643 | 19 |
 | After (filtered) | 385,003 | $780,000 | $887,946 | 1,570 | 16 |
 
+![Mean vs median close price before and after IQR filtering — the mean collapses 21% while the median moves 4%](week7/figures/iqr_mean_vs_median.png)
+
+![Share of rows above each IQR fence, sold vs listings — about one row in six trips a fence](week7/figures/iqr_flag_rates.png)
+
 **What we learned**
 - **All three fences are one-sided.** Housing data is right-skewed, so the "too low" thresholds go negative and flag nothing — only the luxury tail (>$2.34M), oversized homes (>3,680 sqft), and slow sales (>110 days) get flagged: **15.5%** of sold rows, **15.2%** of listings.
 - **The median barely moves (−4%) but the mean collapses (−21%).** That's the whole lesson of this week in one line: a handful of $10M+ sales were dragging the average up by $235K. Medians were already telling the truth; means needed the filter.
