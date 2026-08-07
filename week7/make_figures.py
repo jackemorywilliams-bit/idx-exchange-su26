@@ -55,12 +55,14 @@ def fig_mean_vs_median():
     for s in ax.spines.values():
         s.set_visible(False)
     ax.tick_params(length=0)
-    ax.set_title("The average was the outlier problem — the median barely moves",
-                 fontsize=12.5, fontweight="bold", color=INK, pad=40, loc="left")
-    ax.text(0, 1.13, "Sold ClosePrice before vs after IQR filtering — a handful of "
-                     "\\$10M+ sales inflated the mean by ~\\$235K; listings behave the same",
-            transform=ax.transAxes, fontsize=10, color=INK2)
-    fig.tight_layout()
+    fig.suptitle("The average was the outlier problem — the median barely moves",
+                 fontsize=12.5, fontweight="bold", color=INK, x=0.02, y=0.985,
+                 ha="left")
+    fig.text(0.02, 0.905, "Sold ClosePrice before vs after IQR filtering — a handful "
+                          "of \\$10M+ sales inflated the mean by ~\\$235K; "
+                          "listings behave the same",
+             fontsize=10, color=INK2)
+    fig.subplots_adjust(top=0.82, bottom=0.12, left=0.06, right=0.97)
     out = os.path.join(FIG_DIR, "iqr_mean_vs_median.png")
     fig.savefig(out, bbox_inches="tight", facecolor=SURFACE)
     print("saved", out)
@@ -74,7 +76,7 @@ def fig_flag_rates():
     # extra half-unit gap before the "Any" row
     ys = [0, 1, 2, 3.5]
 
-    fig, ax = plt.subplots(figsize=(9, 4.0), dpi=200)
+    fig, ax = plt.subplots(figsize=(9, 4.4), dpi=200)
     for i, y in enumerate(ys):
         ax.barh(y - 0.21, sold[i], color=BLUE, height=0.36, zorder=3)
         ax.barh(y + 0.21, lst[i], color=AQUA, height=0.36, zorder=3)
@@ -93,14 +95,15 @@ def fig_flag_rates():
     ax.tick_params(length=0)
     handles = [plt.Rectangle((0, 0), 1, 1, color=BLUE),
                plt.Rectangle((0, 0), 1, 1, color=AQUA)]
-    ax.legend(handles, ["Sold", "Listings"], frameon=False, fontsize=9,
-              loc="upper right")
-    ax.set_title("About one row in six trips an IQR fence — sold and listings agree",
-                 fontsize=12.5, fontweight="bold", color=INK, pad=26, loc="left")
-    ax.text(0, 1.08, "Share of rows above each upper fence; filtered files keep "
-                     "385,003 of 455,449 sold and 427,468 of 504,162 listing rows",
-            transform=ax.transAxes, fontsize=10, color=INK2)
-    fig.tight_layout()
+    ax.legend(handles, ["Sold", "Listings"], frameon=False, fontsize=9.5,
+              loc="center right", bbox_to_anchor=(1.0, 0.85))
+    fig.suptitle("About one row in six trips an IQR fence — sold and listings agree",
+                 fontsize=12.5, fontweight="bold", color=INK, x=0.02, y=0.985,
+                 ha="left")
+    fig.text(0.02, 0.905, "Share of rows above each upper fence; filtered files keep "
+                          "385,003 of 455,449 sold and 427,468 of 504,162 listing rows",
+             fontsize=10, color=INK2)
+    fig.subplots_adjust(top=0.84, bottom=0.06, left=0.24, right=0.97)
     out = os.path.join(FIG_DIR, "iqr_flag_rates.png")
     fig.savefig(out, bbox_inches="tight", facecolor=SURFACE)
     print("saved", out)

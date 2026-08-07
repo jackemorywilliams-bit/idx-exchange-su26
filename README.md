@@ -313,6 +313,8 @@ Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` (455,449 × 62) a
 
 ![Mean vs median close price before and after IQR filtering — the mean collapses 21% while the median moves 4%](week7/figures/iqr_mean_vs_median.png)
 
+And what each fence caught, side by side for the two datasets:
+
 ![Share of rows above each IQR fence, sold vs listings — about one row in six trips a fence](week7/figures/iqr_flag_rates.png)
 
 **What we learned**
@@ -321,6 +323,8 @@ Output: `Week 6 _ Deliverable _ Sold Residential Enriched.csv` (455,449 × 62) a
 - **The filter doesn't skew geography.** County flag rates are nearly flat (Riverside 15.4%, LA 16.4%, Orange 16.9%) — so trend charts built on the filtered file represent every county fairly.
 - **But it does bite the investor tier via one fence:** in sub-$600K stock only the *days-on-market* fence fires (10.8%), and the slow-sale tail it removes is 40% sub-$600K. That's exactly the "stale listing" inventory investors buy — which is why **every investor/capstone metric stays on the flagged (pre-IQR) file**, a rule now printed by the script itself.
 - Listings with no sale price (16% — still on the market) can't be price outliers; they pass through and stay.
+- **The handbook's intro also names price-per-sqft and the close-to-list ratio as distortion-prone**, so the script reports a diagnostic for both (would-flag 4.1% and 9.4% respectively) without flagging them — the deliverable's three named fields define the filtered files, and most of those rows are already caught by the price/size fences anyway.
+- **The tiered approach, explicitly:** tier 1 = business rules (done in Weeks 4–5: `ClosePrice <= 0` etc.), tier 2 = these IQR flags, tier 3 = the separate filtered file — raw records always preserved.
 - One honest limitation, noted not fixed: fences are computed statewide. A $2.5M home is an outlier in Riverside but ordinary in parts of San Mateo — per-county fences would be the more rigorous upgrade, deferred to keep results comparable across the team.
 
 Output: four CSVs — `Week 7 _ Deliverable _ {Sold, Listing} Residential IQR {Flagged, Filtered}.csv`. The script ends with the full observed output embedded as comments.

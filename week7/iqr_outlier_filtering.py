@@ -16,6 +16,22 @@ SPEC CHECKLIST (handbook wording -> artifact):
    median values before and after filtering"   -> printed comparison table below
                                                   (+ README prose)
   "use percentiles alongside IQR"              -> percentile block printed per field
+  intro also names "price per square footage,
+   close to list ratio" as distortion-prone    -> DIAGNOSTIC-ONLY block for
+                                                  price_per_sqft + close-to-list
+                                                  ratio (percentiles + would-be
+                                                  fence counts; NOT flagged, so the
+                                                  filtered files stay defined by the
+                                                  three fields the deliverable names
+                                                  and comparable across the team)
+  "tiered approach: flag extreme values,
+   apply business rules, separate filtered
+   dataset"                                    -> tier 1 = Weeks 4-5 business rules
+                                                  (ClosePrice<=0 etc. already
+                                                  removed); tier 2 = these IQR
+                                                  flags; tier 3 = separate filtered
+                                                  files (originals untouched);
+                                                  stated in the printed output
 
 Inputs: the Week 6 enriched datasets (sold 455,449 x 62 / listings 504,162 x 60).
 DistrictName / district_match_status and all engineered metrics carry through to
@@ -110,6 +126,23 @@ def iqr_flags(df, label):
     return df
 
 
+def intro_field_diagnostics(df, label):
+    """The handbook INTRO also names PPSF and close-to-list ratio as distortion-
+    prone. Diagnostic only: percentiles + how many rows WOULD trip a 1.5*IQR
+    fence. No flags -- the deliverable's named fields define the filtered files."""
+    print(f"\n=== INTRO-FIELD DIAGNOSTICS ({label}) -- reported, not flagged ===")
+    for f in ("price_per_sqft", "close_to_original_list_ratio"):
+        s = pd.to_numeric(df[f], errors="coerce").dropna()
+        q1, q3 = s.quantile(0.25), s.quantile(0.75)
+        lo, hi = q1 - 1.5 * (q3 - q1), q3 + 1.5 * (q3 - q1)
+        n_out = int(((s < lo) | (s > hi)).sum())
+        print(f"  {f}: median={s.median():,.2f}  p95={s.quantile(.95):,.2f}  "
+              f"p99={s.quantile(.99):,.2f}  would-be fences=[{lo:,.2f}, {hi:,.2f}]"
+              f"  would flag {n_out:,} rows ({n_out/len(df)*100:.2f}%)")
+    print("  note: most of these rows are already caught by the three named "
+          "fences (a PPSF outlier is usually a price or size outlier).")
+
+
 def written_comparison(before, after, label):
     """The handbook's written comparison: size + medians (means as context)."""
     print(f"\n=== WRITTEN COMPARISON ({label}): before vs after IQR filtering ===")
@@ -176,7 +209,12 @@ def main():
         print(f"loaded Week 6 enriched: {len(df):,} rows x {n_cols_in} cols")
         preview(df, f"{prefix} input as loaded")
 
+        print("TIERED APPROACH (per handbook): tier 1 = business rules, applied in "
+              "Weeks 4-5 (ClosePrice<=0 etc.; 209 sold / 304 listing rows removed "
+              "there); tier 2 = IQR flags below; tier 3 = separate filtered file "
+              "(the flagged original keeps every row).")
         df = iqr_flags(df, prefix)
+        intro_field_diagnostics(df, prefix)
         flag_cols = list(FLAG_OF.values()) + ["any_iqr_outlier_flag"]
         preview(df[df["any_iqr_outlier_flag"] == 1], f"{prefix} flagged examples",
                 flag_cols)
@@ -233,6 +271,8 @@ if __name__ == "__main__":
 #   capstone metrics.
 # District + engineered columns carried through all 4 outputs (asserted+printed).
 # Sanity band 12-20%: PASSED at 15.47% / 15.21%.
+# INTRO-FIELD DIAGNOSTICS (reported, not flagged): PPSF would flag 4.07% |
+#   close-to-list ratio would flag 9.35% -- largely overlapping the named fences.
 # =============================================================================
 
 # =============================================================================
@@ -249,6 +289,7 @@ if __name__ == "__main__":
 #   1890500.0      3194.0             0 2024-01     Los Angeles
 #   2100000.0      3736.0             0 2024-01 San Luis Obispo
 #   2340000.0      2442.0             0 2024-01     Santa Clara
+# TIERED APPROACH (per handbook): tier 1 = business rules, applied in Weeks 4-5 (ClosePrice<=0 etc.; 209 sold / 304 listing rows removed there); tier 2 = IQR flags below; tier 3 = separate filtered file (the flagged original keeps every row).
 # 
 # === IQR FENCES & PERCENTILES (Sold) ===
 # 
@@ -268,6 +309,11 @@ if __name__ == "__main__":
 #   flagged: below=0  above=33,960  total=33,960 (7.46% of rows)
 # 
 # any_iqr_outlier_flag: 70,446 rows (15.47%)
+# 
+# === INTRO-FIELD DIAGNOSTICS (Sold) -- reported, not flagged ===
+#   price_per_sqft: median=532.08  p95=1,190.67  p99=1,851.95  would-be fences=[-173.16, 1,261.79]  would flag 18,524 rows (4.07%)
+#   close_to_original_list_ratio: median=0.99  p95=1.11  p99=1.28  would-be fences=[0.86, 1.12]  would flag 42,565 rows (9.35%)
+#   note: most of these rows are already caught by the three named fences (a PPSF outlier is usually a price or size outlier).
 # 
 # -- preview: Sold flagged examples (first 5 rows) --
 #  ClosePrice  LivingArea  DaysOnMarket    YrMo  CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
@@ -329,6 +375,7 @@ if __name__ == "__main__":
 #    160000.0      1008.0            10 2026-04           Lake
 #   2000000.0      2573.0            98 2026-04    Los Angeles
 #   3200000.0      1381.0             0 2025-05      San Diego
+# TIERED APPROACH (per handbook): tier 1 = business rules, applied in Weeks 4-5 (ClosePrice<=0 etc.; 209 sold / 304 listing rows removed there); tier 2 = IQR flags below; tier 3 = separate filtered file (the flagged original keeps every row).
 # 
 # === IQR FENCES & PERCENTILES (Listing) ===
 # 
@@ -348,6 +395,11 @@ if __name__ == "__main__":
 #   flagged: below=0  above=38,811  total=38,811 (7.70% of rows)
 # 
 # any_iqr_outlier_flag: 76,694 rows (15.21%)
+# 
+# === INTRO-FIELD DIAGNOSTICS (Listing) -- reported, not flagged ===
+#   price_per_sqft: median=537.16  p95=1,197.06  p99=1,854.80  would-be fences=[-168.40, 1,267.42]  would flag 17,158 rows (3.40%)
+#   close_to_original_list_ratio: median=1.00  p95=1.11  p99=1.28  would-be fences=[0.86, 1.12]  would flag 39,632 rows (7.86%)
+#   note: most of these rows are already caught by the three named fences (a PPSF outlier is usually a price or size outlier).
 # 
 # -- preview: Listing flagged examples (first 5 rows) --
 #  ClosePrice  LivingArea  DaysOnMarket    YrMo CountyOrParish  closeprice_iqr_outlier_flag  livingarea_iqr_outlier_flag  daysonmarket_iqr_outlier_flag  any_iqr_outlier_flag
