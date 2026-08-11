@@ -77,13 +77,15 @@ def filter_deps(ds):
         f"name='[none:{d}:nk]' pivot='key' type='nominal' />" for d in FILTER_DIMS)
     filts = "\n".join(
         f"          <filter class='categorical' column='[{ds}].[none:{d}:nk]'>"
-        f"<groupfilter function='level-members' level='[{d}]' /></filter>"
+        f"<groupfilter function='level-members' level='[none:{d}:nk]' "
+        f"user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>"
         for d in FILTER_DIMS)
     return cols, filts
 
 
 def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt,
               mark, iqr_only, extra_rows_inst=""):
+    caption_ds = 'Market Sold (Flagged)' if ds == SOLD_DS else 'Market Listings (Flagged)'
     filter_cols, filter_elems = filter_deps(ds)
     iqr_dep = iqr_filter = ""
     if iqr_only:
@@ -93,7 +95,11 @@ def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt
         iqr_filter = (f"          <filter class='categorical' "
                       f"column='[{ds}].[none:any_iqr_outlier_flag:ok]'>"
                       f"<groupfilter function='member' "
-                      f"level='[any_iqr_outlier_flag]' member='0' /></filter>")
+                      f"level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>")
+    slice_cols = "\n".join(
+        f"            <column>[{ds}].[none:{d}:nk]</column>" for d in FILTER_DIMS)
+    if iqr_only:
+        slice_cols += f"\n            <column>[{ds}].[none:any_iqr_outlier_flag:ok]</column>"
     rows_expr = f"[{ds}].{measure_inst}" + (f" + [{ds}].{extra_rows_inst}" if extra_rows_inst else "")
     return f"""    <worksheet name='{name}'>
       <layout-options>
@@ -104,7 +110,7 @@ def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt
       <table>
         <view>
           <datasources>
-            <datasource caption='{ds}' name='{ds}' />
+            <datasource caption='{caption_ds}' name='{ds}' />
           </datasources>
           <datasource-dependencies datasource='{ds}'>
             <column datatype='date' name='[{date_col}]' role='dimension' type='ordinal' />
@@ -117,6 +123,9 @@ def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt
           </datasource-dependencies>
 {filter_elems}
 {iqr_filter}
+          <slices>
+{slice_cols}
+          </slices>
           <aggregation value='true' />
         </view>
         <style />
