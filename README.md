@@ -37,9 +37,13 @@ week6/
   make_figures.py        # README figures (district coverage, new-column findings)
 week7/
   iqr_outlier_filtering.py # IQR outlier flags on price/size/DOM → flagged + filtered CSVs
+week8-10/
+  make_extracts.py         # Week 7 flagged CSVs → Tableau .hyper extracts
+  make_market_workbook.py  # generates market_analysis.twb (worksheets, dashboards, filters)
+  market_analysis.twb      # the generated workbook STRUCTURE (XML — contains no data rows)
 ```
 
-Data CSVs, Excel files, and Tableau `.twbx` workbooks are gitignored — this repo holds code and documentation only.
+Data CSVs, Excel files, Tableau `.twbx` workbooks, and `.hyper` extracts are gitignored — this repo holds code and documentation only. The committed `.twb` is pure XML structure (chart definitions, no data rows); the data-bearing `.twbx` deliverable lives locally until publishing is cleared.
 
 ## The two-pipeline model
 
@@ -53,11 +57,11 @@ There are two canonical **raw** datasets — `listings.csv` and `sold.csv` — w
 ## Weekly workflow (end to end)
 
 1. Run the two extraction scripts → update the two raw datasets.
-2. Run the downstream stages (Weeks 2–5) to produce the enriched, cleaned versions.
-3. Near the end of the internship, load the two Weeks 4–5 **clean-view** CSVs into **Tableau Public Desktop**.
-4. Save the full working workbook as a `.twbx` (all worksheets visible).
+2. Run the downstream stages (Weeks 2–7) to produce the enriched, flagged datasets.
+3. Weeks 8–10: `make_extracts.py` packages the Week 7 flagged data into `.hyper` extracts, and the workbook generators write the Tableau workbooks as XML — opened and reviewed in **Tableau Public Desktop 2026.2**.
+4. Save the full working workbook locally as a `.twbx` (all worksheets visible).
 5. Save a second `.twbx` with worksheets hidden and only dashboards visible.
-6. Publish that version to **public.tableau.com**.
+6. Weeks 11–12: publish that version to **public.tableau.com** (pending the data-policy confirmation, using pre-aggregated extracts only).
 
 ## How to run
 
@@ -87,6 +91,17 @@ python3 week2-3/mortgage_enrichment.py
 # (reads the Weeks 2–3 "With Rates" files from CRMLS_DELIV_DIR):
 export CRMLS_DELIV_DIR="$CRMLS_OUTPUT_DIR"
 python3 week4-5/data_cleaning.py
+
+# Week 6 — engineered metrics + school-district join; Week 7 — IQR outlier flags:
+python3 week6/feature_engineering.py
+python3 week7/iqr_outlier_filtering.py
+
+# Weeks 8–10 — build Tableau extracts + generate the market workbook
+# (needs tableauhyperapi; the .twb opens in Tableau Public 2026.2):
+pip install tableauhyperapi
+python3 week8-10/make_extracts.py
+python3 week8-10/make_market_workbook.py
+open week8-10/market_analysis.twb   # or open the copy in ~/idx-exchange/tableau/
 ```
 
 ---
@@ -340,4 +355,8 @@ Two scripts in `week8-10/`:
 
 **The nuance carried into every chart** (from the summer's locked rules): medians and counts use **all** rows (medians are robust; counts must never silently lose 15% of transactions), while the two *averages* — days on market and sale-to-ask ratio — run on the IQR-filtered base with a subtitle saying so (one 12,430-day artifact can move a monthly average by days). "Days on market" is the MLS system field, never date arithmetic. The own-design "Rates and the Market" pairs median price with the enriched national 30-yr mortgage rate as **two stacked panes on a shared month axis** — never a dual axis — with a note that the rate is national, so geographic filters move only the price line.
 
-**Deliberately not done yet:** nothing is published to Tableau Public — the workbook lives locally until the data-policy confirmation arrives. The competitive workbook is Weeks 9–10.
+**How the build went — five validator iterations, all caught by the open-and-check loop:** missing `source-build` attribute; `window` elements need a `cards` block; dashboard zones need `id` attributes; two measures on a shelf join with `+` not a space; and the finale — Tableau dashboards use a **0–100,000 coordinate space**, so zones written in 0–100 rendered at 0.1% size (dashboards looked empty; they were microscopic). The last two fixes came from extracting ground truth out of Tableau's own bundled Superstore workbook instead of guessing: filter `level` attributes reference column-*instance* names (`[none:City:nk]`), quick filters need a `<slices>` shelf, and zone attributes are `type-v2`. The committed `market_analysis.twb` is the final validated structure.
+
+**Result:** the workbook opens clean in Tableau Public 2026.2 — six worksheets rendering (median price ~$740K→$850K→$780–810K over 30 months, exactly matching the pipeline numbers), six dashboards with working filter cards, generated end-to-end by code.
+
+**Deliberately not done yet:** nothing is published to Tableau Public — the `.twbx` lives locally until the data-policy confirmation arrives. The competitive workbook is Weeks 9–10.
