@@ -94,7 +94,7 @@ def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt
                       f"column='[{ds}].[none:any_iqr_outlier_flag:ok]'>"
                       f"<groupfilter function='member' "
                       f"level='[any_iqr_outlier_flag]' member='0' /></filter>")
-    rows_expr = f"[{ds}].{measure_inst}" + (f" [{ds}].{extra_rows_inst}" if extra_rows_inst else "")
+    rows_expr = f"[{ds}].{measure_inst}" + (f" + [{ds}].{extra_rows_inst}" if extra_rows_inst else "")
     return f"""    <worksheet name='{name}'>
       <layout-options>
         <title>
