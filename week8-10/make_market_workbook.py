@@ -152,19 +152,21 @@ def measure_inst_decl(inst, col):
 
 
 def dashboard(name, sheet, ds, note):
+    # Coordinates are in Tableau's 0-100,000 dashboard space; attrs are type-v2.
     filter_zones = "\n".join(
-        f"          <zone h='8' id='{4 + i}' name='{sheet}' param='[{ds}].[none:{d}:nk]' "
-        f"type='filter' w='16' x='84' y='{8 + i * 10}' />"
+        f"          <zone h='12000' id='{4 + i}' mode='checkdropdown' name='{sheet}' "
+        f"param='[{ds}].[none:{d}:nk]' type-v2='filter' w='16000' x='84000' "
+        f"y='{6000 + i * 12000}' />"
         for i, d in enumerate(FILTER_DIMS))
     return f"""    <dashboard name='{name}'>
       <style />
       <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
       <zones>
-        <zone h='100' id='1' type='layout-basic' w='100' x='0' y='0'>
-          <zone h='6' id='2' type='text' w='84' x='0' y='0'>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
             <formatted-text><run>{note}</run></formatted-text>
           </zone>
-          <zone h='94' id='3' name='{sheet}' w='84' x='0' y='6' />
+          <zone h='94000' id='3' name='{sheet}' w='84000' x='0' y='6000' />
 {filter_zones}
         </zone>
       </zones>
