@@ -144,7 +144,7 @@ def measure_inst_decl(inst, col):
 
 def dashboard(name, sheet, ds, note):
     filter_zones = "\n".join(
-        f"          <zone h='8' name='{sheet}' param='[{ds}].[none:{d}:nk]' "
+        f"          <zone h='8' id='{4 + i}' name='{sheet}' param='[{ds}].[none:{d}:nk]' "
         f"type='filter' w='16' x='84' y='{8 + i * 10}' />"
         for i, d in enumerate(FILTER_DIMS))
     return f"""    <dashboard name='{name}'>
