@@ -16,7 +16,7 @@ The five required monthly views (Jan 2024 – Jun 2026, each filterable by City,
 
 1. **Monthly Median Close Price** — line; all rows (medians are robust to outliers)
 2. **Average Days on Market** — line; IQR-filtered, because one 12,430-day artifact moves a monthly mean by days
-3. **Average Close-to-Original-List Ratio** — line; IQR-filtered (a single 112× ratio shifts a monthly average by 11 points)
+3. **Average Close-to-Original-List Ratio** — line; IQR-filtered **plus a (0, 2] ratio range filter**. The IQR flag fences price/area/DOM but not the ratio itself, and 552 surviving rows (0.14%) carry data-entry ratios above 2× (max: 1,077,419× — a $1 original list price), enough to push a monthly average to 170.95. With the range filter the line sits where it should: 0.98–1.02 (median ratio is exactly 1.0000). The exclusion is disclosed in the chart subtitle.
 4. **New Listings** — bars; counted by *listing* date, all rows
 5. **Closed Sales** — bars; counted by *close* date, all rows
 6. **Rates and the Market** (own design) — median price and the national 30-yr mortgage rate as **two stacked panes** on a shared month axis (never a dual axis); uses the FRED enrichment from Weeks 2–3

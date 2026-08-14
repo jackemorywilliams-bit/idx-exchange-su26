@@ -154,7 +154,7 @@
     <worksheet name='Average Close-to-Original-List Ratio'>
       <layout-options>
         <title>
-          <formatted-text><run>Avg Close-to-Original-List Ratio - AVG of per-sale ratio, IQR-filtered</run></formatted-text>
+          <formatted-text><run>Avg Close-to-Original-List Ratio - AVG of per-sale ratio, IQR-filtered; ratios above 2 excluded (552 rows, 0.14%, data-entry artifacts)</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -170,6 +170,7 @@
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
             <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[price_ratio]' derivation='None' name='[none:price_ratio:qk]' pivot='key' type='quantitative' />
             <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
             <column-instance column='[price_ratio]' derivation='Avg' name='[avg:price_ratio:qk]' pivot='key' type='quantitative' />
             
@@ -179,12 +180,14 @@
           <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
+          <filter class='quantitative' column='[federated.sold].[none:price_ratio:qk]' included-values='in-range'><min>0</min><max>2</max></filter>
           <slices>
             <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:CountyOrParish:nk]</column>
             <column>[federated.sold].[none:PostalCode:nk]</column>
             <column>[federated.sold].[none:PropertySubType:nk]</column>
             <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
+            <column>[federated.sold].[none:price_ratio:qk]</column>
           </slices>
           <aggregation value='true' />
         </view>

@@ -84,7 +84,7 @@ def filter_deps(ds):
 
 
 def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt,
-              mark, iqr_only, extra_rows_inst=""):
+              mark, iqr_only, extra_rows_inst="", ratio_bound=False):
     caption_ds = 'Market Sold (Flagged)' if ds == SOLD_DS else 'Market Listings (Flagged)'
     filter_cols, filter_elems = filter_deps(ds)
     iqr_dep = iqr_filter = ""
@@ -96,10 +96,22 @@ def worksheet(name, ds, caption, date_col, measure_inst, measure_col, measure_dt
                       f"column='[{ds}].[none:any_iqr_outlier_flag:ok]'>"
                       f"<groupfilter function='member' "
                       f"level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>")
+    if ratio_bound:
+        # The IQR flag fences price/area/DOM but NOT the ratio itself; 552
+        # IQR-kept rows (0.14%) carry data-entry ratios above 2x (max 1.08M x)
+        # that poison a monthly AVG. Range filter keeps the average honest.
+        iqr_dep += ("\n            <column-instance column='[price_ratio]' "
+                    "derivation='None' name='[none:price_ratio:qk]' "
+                    "pivot='key' type='quantitative' />")
+        iqr_filter += (f"\n          <filter class='quantitative' "
+                       f"column='[{ds}].[none:price_ratio:qk]' "
+                       f"included-values='in-range'><min>0</min><max>2</max></filter>")
     slice_cols = "\n".join(
         f"            <column>[{ds}].[none:{d}:nk]</column>" for d in FILTER_DIMS)
     if iqr_only:
         slice_cols += f"\n            <column>[{ds}].[none:any_iqr_outlier_flag:ok]</column>"
+    if ratio_bound:
+        slice_cols += f"\n            <column>[{ds}].[none:price_ratio:qk]</column>"
     rows_expr = f"[{ds}].{measure_inst}" + (f" + [{ds}].{extra_rows_inst}" if extra_rows_inst else "")
     return f"""    <worksheet name='{name}'>
       <layout-options>
@@ -184,9 +196,11 @@ def main():
                         "CloseDate", "[avg:days_on_market:qk]", "days_on_market", "real",
                         "Line", iqr_only=True))
     ws.append(worksheet("Average Close-to-Original-List Ratio", SOLD_DS,
-                        "Avg Close-to-Original-List Ratio - AVG of per-sale ratio, IQR-filtered",
+                        "Avg Close-to-Original-List Ratio - AVG of per-sale ratio, "
+                        "IQR-filtered; ratios above 2 excluded (552 rows, 0.14%, "
+                        "data-entry artifacts)",
                         "CloseDate", "[avg:price_ratio:qk]", "price_ratio", "real",
-                        "Line", iqr_only=True))
+                        "Line", iqr_only=True, ratio_bound=True))
     ws.append(worksheet("New Listings", LIST_DS,
                         "New Listings per Month (by listing contract date, all rows)",
                         "ListingContractDate", "[cnt:ListYrMo:qk]", "ListYrMo", "string",
@@ -254,12 +268,20 @@ if __name__ == "__main__":
 
 # RUN LOG (observed)
 # -----------------------------------------------------------------------------
-# wrote ~/idx-exchange/tableau/market_analysis.twb (426 lines).
+# wrote ~/idx-exchange/tableau/market_analysis.twb.
 # Opened in Tableau Public 2026.2.1 with no fresh validator errors in
 # ~/Documents/My Tableau Repository/Logs. Structure: 2 embedded-extract
 # datasources (sold flagged 455,449 / listings flagged 504,162), 6 worksheets,
 # 6 single-view dashboards each carrying the 4 required filter cards + a
 # provenance note. Metric bases per locked rules: medians/counts all rows;
-# AVG DOM + AVG ratio on any_iqr_outlier_flag=0. NOT published anywhere --
-# local only pending the confidentiality confirmation.
+# AVG DOM + AVG ratio on any_iqr_outlier_flag=0.
+#
+# RATIO FIX (found when the dashboards first rendered): the IQR flag fences
+# ClosePrice/LivingArea/DaysOnMarket but NOT price_ratio, so 552 IQR-kept
+# rows (0.14%) with data-entry ratios above 2x (max 1,077,419x -- e.g. a $1
+# original list price) pushed monthly AVG(price_ratio) as high as 170.95.
+# Measured on the Week 7 flagged sold file: median ratio 1.0000, p75 1.0216;
+# with the (0, 2] range filter the monthly average lands at 0.9811-1.0166.
+# The ratio worksheet now carries that quantitative filter, disclosed in its
+# subtitle; no other view is affected and the extracts are untouched.
 # =============================================================================
