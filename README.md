@@ -359,4 +359,14 @@ Two scripts in `week8-10/`:
 
 **Result:** the workbook opens clean in Tableau Public 2026.2 — six worksheets rendering (median price ~$740K→$850K→$780–810K over 30 months, exactly matching the pipeline numbers), six dashboards with working filter cards, generated end-to-end by code.
 
+**A data-quality catch the dashboards themselves surfaced:** the first live render of the ratio view showed monthly averages spiking to 170 — impossible for a close-to-list ratio. The cause: the Week 7 IQR flag fences price, living area, and days-on-market, but **not the ratio itself**, so 552 surviving rows (0.14% of the IQR-kept base) with data-entry ratios above 2× (worst case 1,077,419× — a $1 original list price) poisoned the average. The fix is a disclosed (0, 2] range filter on the ratio worksheet only: median ratio is exactly 1.0000, and the monthly average now lands where the market actually is, 0.98–1.02. This is exactly why the averages-need-guarding rule exists — and why medians never needed one.
+
+Two of the six rendered dashboards (all six are in [week8-10/README.md](week8-10/README.md)):
+
+![Average close-to-original-list ratio dashboard, after the ratio range fix](week8-10/img/db_avg_close_to_list_ratio.png)
+
+![Rates and the Market own-design dashboard — median close price and national 30-yr mortgage rate as stacked panes](week8-10/img/db_rates_and_the_market.png)
+
+**Publishing:** per the program's August 24 directive, Tableau progress is shown by publishing to Tableau Public rather than committing workbook files — the repo keeps the *generator code* and the data-free `.twb` structure, and the published workbook lives on the Tableau Public profile (worksheets hidden, dashboards only, per the program's publishing guidance).
+
 **Deliberately not done yet:** nothing is published to Tableau Public — the `.twbx` lives locally until the data-policy confirmation arrives. The competitive workbook is Weeks 9–10.

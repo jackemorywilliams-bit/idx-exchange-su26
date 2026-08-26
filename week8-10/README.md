@@ -23,6 +23,32 @@ The five required monthly views (Jan 2024 – Jun 2026, each filterable by City,
 
 **The nuance rule in one line:** medians and counts use *all* rows (counts must never silently lose 15% of real transactions); *averages* use the IQR-filtered base with a subtitle saying so. Every dashboard carries a one-line provenance note disclosing the split.
 
+## The six dashboards, rendered
+
+1 — Monthly Median Close Price (all rows):
+
+![Monthly median close price](img/db_monthly_median_close_price.png)
+
+2 — Average Days on Market (IQR-filtered):
+
+![Average days on market](img/db_average_days_on_market.png)
+
+3 — Average Close-to-Original-List Ratio (IQR-filtered + disclosed (0, 2] ratio bound):
+
+![Average close-to-original-list ratio](img/db_avg_close_to_list_ratio.png)
+
+4 — New Listings by listing contract date (all rows):
+
+![New listings per month](img/db_new_listings.png)
+
+5 — Closed Sales by close date (all rows):
+
+![Closed sales per month](img/db_closed_sales.png)
+
+6 — Rates and the Market (own design — stacked panes, never a dual axis):
+
+![Median close price vs national 30-yr mortgage rate](img/db_rates_and_the_market.png)
+
 ## How to run
 
 ```bash
@@ -47,5 +73,5 @@ The last fixes came from **extracting ground truth from Tableau's own bundled Su
 ## Status & what's deliberately not here
 
 - ✅ Workbook opens clean in Tableau Public 2026.2; worksheets render with pipeline-matching numbers (median price ~$740K → $850K → $780–810K across the 30 months); dashboards populated with working filters.
-- 🔒 **Nothing is published to Tableau Public** — publishing is the Weeks 11–12 step and is gated on the data-policy confirmation (pre-aggregated extracts only).
+- 📤 **Publishing goes to Tableau Public** per the program's August 24 directive (show Tableau progress on Tableau Public rather than committing workbook files). Published per the program's guidance: worksheets hidden, dashboards only, desktop layout.
 - ⏭️ Weeks 9–10: `competitive_analysis.twbx` — top-100 agents/offices (where the office-name normalization and NONMEMBER-sentinel exclusion get used), the two zip-code heat maps, and the competitive own-design dashboard.
