@@ -5,9 +5,10 @@ Reads the Week 7 IQR FLAGGED files (canonical base: every row present, 0/1 flags
 carried) and writes two trimmed extracts into ~/idx-exchange/tableau/:
 
   market_sold.hyper      455,449 rows -- close date/month, price, ratio, DOM,
-                         geography, subtype, district, IQR flag, mortgage rate
+                         geography, subtype, district, IQR flag, mortgage rate,
+                         county_sold_rank (1 = most closed sales)
   market_listings.hyper  504,162 rows -- listing date/month, geography, subtype,
-                         IQR flag
+                         IQR flag, listing_subtype_rank (1 = most listings)
 
 Column trimming is deliberate: only fields the market_analysis views and their
 required filters (City / CountyOrParish / PostalCode / PropertySubType) need.
@@ -36,12 +37,13 @@ SOLD_COLS = {
     "CountyOrParish": SqlType.text(), "PostalCode": SqlType.text(),
     "PropertySubType": SqlType.text(), "DistrictName": SqlType.text(),
     "any_iqr_outlier_flag": SqlType.big_int(), "rate_30yr_fixed": SqlType.double(),
+    "county_sold_rank": SqlType.big_int(),
 }
 LIST_COLS = {
     "ListingContractDate": SqlType.date(), "ListYrMo": SqlType.text(),
     "City": SqlType.text(), "CountyOrParish": SqlType.text(),
     "PostalCode": SqlType.text(), "PropertySubType": SqlType.text(),
-    "any_iqr_outlier_flag": SqlType.big_int(),
+    "any_iqr_outlier_flag": SqlType.big_int(), "listing_subtype_rank": SqlType.big_int(),
 }
 
 
@@ -65,12 +67,17 @@ def build(hyper, name, df, cols):
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    sold = pd.read_csv(SOLD_IN, usecols=list(SOLD_COLS), low_memory=False)
+    sold = pd.read_csv(SOLD_IN, usecols=[c for c in SOLD_COLS if c != "county_sold_rank"],
+                       low_memory=False)
     assert len(sold) == EXPECTED["sold"], f"sold rows {len(sold):,}"
     sold["CloseDate"] = pd.to_datetime(sold["CloseDate"], errors="coerce").dt.date
     sold["PostalCode"] = sold["PostalCode"].astype(str).str.split(".").str[0]
+    # Rank counties by total closed sales (1 = most) so dashboards can show a
+    # "top-15 counties" bar chart with a plain range filter (rank <= 15).
+    county_rank = {c: i + 1 for i, c in enumerate(sold["CountyOrParish"].value_counts().index)}
+    sold["county_sold_rank"] = sold["CountyOrParish"].map(county_rank).fillna(9999).astype(int)
 
-    lst = pd.read_csv(LIST_IN, usecols=[c for c in LIST_COLS if c != "ListYrMo"],
+    lst = pd.read_csv(LIST_IN, usecols=[c for c in LIST_COLS if c not in ("ListYrMo", "listing_subtype_rank")],
                       low_memory=False)
     assert len(lst) == EXPECTED["listings"], f"listing rows {len(lst):,}"
     lst["ListingContractDate"] = pd.to_datetime(lst["ListingContractDate"],
@@ -79,6 +86,9 @@ def main():
     lst["ListYrMo"] = lst["ListingContractDate"].dt.strftime("%Y-%m")
     lst["ListingContractDate"] = lst["ListingContractDate"].dt.date
     lst["PostalCode"] = lst["PostalCode"].astype(str).str.split(".").str[0]
+    # Rank property sub-types by listing count (1 = most) for a value-sorted bar chart.
+    sub_rank = {c: i + 1 for i, c in enumerate(lst["PropertySubType"].value_counts().index)}
+    lst["listing_subtype_rank"] = lst["PropertySubType"].map(sub_rank).fillna(9999).astype(int)
 
     with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hp:
         n1 = build(hp, "market_sold.hyper", sold, SOLD_COLS)

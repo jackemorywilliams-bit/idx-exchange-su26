@@ -10,18 +10,19 @@
         </named-connections>
         <relation connection='hyper.federated.sold' name='Extract' table='[Extract].[Extract]' type='table' />
       </connection>
-      <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-      <column datatype='string' name='[YrMo]' role='dimension' type='nominal' />
-      <column datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
-      <column datatype='real' name='[price_ratio]' role='measure' type='quantitative' />
-      <column datatype='real' name='[days_on_market]' role='measure' type='quantitative' />
+      <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+      <column caption='Closed Sale' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+      <column caption='Close Price' datatype='real' default-format='c&quot;$&quot;#,##0,,.00M;(&quot;$&quot;#,##0,,.00M)' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Close-to-List Ratio' datatype='real' default-format='n#,##0.000;-#,##0.000' name='[price_ratio]' role='measure' type='quantitative' />
+      <column caption='Days on Market' datatype='real' default-format='n#,##0;-#,##0' name='[days_on_market]' role='measure' type='quantitative' />
       <column datatype='string' name='[City]' role='dimension' type='nominal' />
-      <column datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
-      <column datatype='string' name='[PostalCode]' role='dimension' type='nominal' />
-      <column datatype='string' name='[PropertySubType]' role='dimension' type='nominal' />
+      <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
+      <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' type='nominal' />
+      <column caption='Property Type' datatype='string' name='[PropertySubType]' role='dimension' type='nominal' />
       <column datatype='string' name='[DistrictName]' role='dimension' type='nominal' />
       <column datatype='integer' name='[any_iqr_outlier_flag]' role='dimension' type='ordinal' />
-      <column datatype='real' name='[rate_30yr_fixed]' role='measure' type='quantitative' />
+      <column caption='30-yr Mortgage Rate' datatype='real' default-format='n#,##0.00&quot;%&quot;;-#,##0.00&quot;%&quot;' name='[rate_30yr_fixed]' role='measure' type='quantitative' />
+      <column caption='Rank' datatype='integer' name='[county_sold_rank]' role='dimension' type='ordinal' />
       <extract count='-1' enabled='true' units='records'>
         <connection access_mode='readonly' class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/market_sold.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' username='tableau_internal_user'>
           <relation name='Extract' table='[Extract].[Extract]' type='table' />
@@ -37,13 +38,14 @@
         </named-connections>
         <relation connection='hyper.federated.listings' name='Extract' table='[Extract].[Extract]' type='table' />
       </connection>
-      <column datatype='date' name='[ListingContractDate]' role='dimension' type='ordinal' />
-      <column datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
+      <column caption='Listing Date' datatype='date' name='[ListingContractDate]' role='dimension' type='ordinal' />
+      <column caption='New Listing' datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
       <column datatype='string' name='[City]' role='dimension' type='nominal' />
-      <column datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
-      <column datatype='string' name='[PostalCode]' role='dimension' type='nominal' />
-      <column datatype='string' name='[PropertySubType]' role='dimension' type='nominal' />
+      <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
+      <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' type='nominal' />
+      <column caption='Property Type' datatype='string' name='[PropertySubType]' role='dimension' type='nominal' />
       <column datatype='integer' name='[any_iqr_outlier_flag]' role='dimension' type='ordinal' />
+      <column caption='Rank' datatype='integer' name='[listing_subtype_rank]' role='dimension' type='ordinal' />
       <extract count='-1' enabled='true' units='records'>
         <connection access_mode='readonly' class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/market_listings.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' username='tableau_internal_user'>
           <relation name='Extract' table='[Extract].[Extract]' type='table' />
@@ -52,10 +54,10 @@
     </datasource>
   </datasources>
   <worksheets>
-    <worksheet name='Monthly Median Close Price'>
+    <worksheet name='Median Close Price'>
       <layout-options>
         <title>
-          <formatted-text><run>Monthly Median Close Price (all sold rows)</run></formatted-text>
+          <formatted-text><run>Median Close Price by Month (all sold rows)</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -64,25 +66,24 @@
             <datasource caption='Market Sold (Flagged)' name='federated.sold' />
           </datasources>
           <datasource-dependencies datasource='federated.sold'>
-            <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-            <column datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+            <column caption='Close Price' datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
+            
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
-
             <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
             <column-instance column='[ClosePrice]' derivation='Median' name='[med:ClosePrice:qk]' pivot='key' type='quantitative' />
             
           </datasource-dependencies>
-          <filter class='categorical' column='[federated.sold].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <slices>
-            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:PostalCode:nk]</column>
             <column>[federated.sold].[none:PropertySubType:nk]</column>
           </slices>
@@ -95,16 +96,26 @@
               <breakdown value='auto' />
             </view>
             <mark class='Line' />
+            <encodings>
+              <text column='[federated.sold].[med:ClosePrice:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
           </pane>
         </panes>
         <rows>[federated.sold].[med:ClosePrice:qk]</rows>
         <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
       </table>
     </worksheet>
-    <worksheet name='Average Days on Market'>
+    <worksheet name='Close-to-List Ratio'>
       <layout-options>
         <title>
-          <formatted-text><run>Average Days on Market - mean of MLS days_on_market, IQR-filtered</run></formatted-text>
+          <formatted-text><run>Avg Close-to-Original-List Ratio (IQR-filtered; ratios above 2 excluded: 552 rows, 0.14%)</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -113,60 +124,11 @@
             <datasource caption='Market Sold (Flagged)' name='federated.sold' />
           </datasources>
           <datasource-dependencies datasource='federated.sold'>
-            <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-            <column datatype='real' name='[days_on_market]' role='measure' type='quantitative' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
-            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
-            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
-            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
-            <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
-            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[days_on_market]' derivation='Avg' name='[avg:days_on_market:qk]' pivot='key' type='quantitative' />
+            <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+            <column caption='Close-to-List Ratio' datatype='real' name='[price_ratio]' role='measure' type='quantitative' />
             
-          </datasource-dependencies>
-          <filter class='categorical' column='[federated.sold].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
-          <slices>
-            <column>[federated.sold].[none:City:nk]</column>
-            <column>[federated.sold].[none:CountyOrParish:nk]</column>
-            <column>[federated.sold].[none:PostalCode:nk]</column>
-            <column>[federated.sold].[none:PropertySubType:nk]</column>
-            <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
-          </slices>
-          <aggregation value='true' />
-        </view>
-        <style />
-        <panes>
-          <pane>
-            <view>
-              <breakdown value='auto' />
-            </view>
-            <mark class='Line' />
-          </pane>
-        </panes>
-        <rows>[federated.sold].[avg:days_on_market:qk]</rows>
-        <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
-      </table>
-    </worksheet>
-    <worksheet name='Average Close-to-Original-List Ratio'>
-      <layout-options>
-        <title>
-          <formatted-text><run>Avg Close-to-Original-List Ratio - AVG of per-sale ratio, IQR-filtered; ratios above 2 excluded (552 rows, 0.14%, data-entry artifacts)</run></formatted-text>
-        </title>
-      </layout-options>
-      <table>
-        <view>
-          <datasources>
-            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
-          </datasources>
-          <datasource-dependencies datasource='federated.sold'>
-            <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-            <column datatype='real' name='[price_ratio]' role='measure' type='quantitative' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
             <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
@@ -175,15 +137,15 @@
             <column-instance column='[price_ratio]' derivation='Avg' name='[avg:price_ratio:qk]' pivot='key' type='quantitative' />
             
           </datasource-dependencies>
-          <filter class='categorical' column='[federated.sold].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
           <filter class='quantitative' column='[federated.sold].[none:price_ratio:qk]' included-values='in-range'><min>0</min><max>2</max></filter>
           <slices>
-            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:PostalCode:nk]</column>
             <column>[federated.sold].[none:PropertySubType:nk]</column>
             <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
@@ -198,16 +160,145 @@
               <breakdown value='auto' />
             </view>
             <mark class='Line' />
+            <encodings>
+              <text column='[federated.sold].[avg:price_ratio:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
           </pane>
         </panes>
         <rows>[federated.sold].[avg:price_ratio:qk]</rows>
         <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
       </table>
     </worksheet>
-    <worksheet name='New Listings'>
+    <worksheet name='Days on Market'>
       <layout-options>
         <title>
-          <formatted-text><run>New Listings per Month (by listing contract date, all rows)</run></formatted-text>
+          <formatted-text><run>Avg Days on Market (MLS field, IQR-filtered)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+            <column caption='Days on Market' datatype='real' name='[days_on_market]' role='measure' type='quantitative' />
+            
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[days_on_market]' derivation='Avg' name='[avg:days_on_market:qk]' pivot='key' type='quantitative' />
+            
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+            <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Line' />
+            <encodings>
+              <text column='[federated.sold].[avg:days_on_market:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.sold].[avg:days_on_market:qk]</rows>
+        <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Closed Sales'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Closed Sales by Month (all sold rows)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+            <column caption='Closed Sale' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+            
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[YrMo]' derivation='Count' name='[cnt:YrMo:qk]' pivot='key' type='quantitative' />
+            
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <text column='[federated.sold].[cnt:YrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.sold].[cnt:YrMo:qk]</rows>
+        <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='New Listings by Month'>
+      <layout-options>
+        <title>
+          <formatted-text><run>New Listings by Month (listing contract date, all rows)</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -216,25 +307,24 @@
             <datasource caption='Market Listings (Flagged)' name='federated.listings' />
           </datasources>
           <datasource-dependencies datasource='federated.listings'>
-            <column datatype='date' name='[ListingContractDate]' role='dimension' type='ordinal' />
-            <column datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column caption='Listing Date' datatype='date' name='[ListingContractDate]' role='dimension' type='ordinal' />
+            <column caption='New Listing' datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
+            
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
-
             <column-instance column='[ListingContractDate]' derivation='Month-Trunc' name='[tmn:ListingContractDate:qk]' pivot='key' type='quantitative' />
             <column-instance column='[ListYrMo]' derivation='Count' name='[cnt:ListYrMo:qk]' pivot='key' type='quantitative' />
             
           </datasource-dependencies>
-          <filter class='categorical' column='[federated.listings].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.listings].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.listings].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.listings].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-
+          <filter class='categorical' column='[federated.listings].[none:CountyOrParish:nk]' filter-group='5'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:City:nk]' filter-group='6'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PostalCode:nk]' filter-group='7'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PropertySubType:nk]' filter-group='8'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <slices>
-            <column>[federated.listings].[none:City:nk]</column>
             <column>[federated.listings].[none:CountyOrParish:nk]</column>
+            <column>[federated.listings].[none:City:nk]</column>
             <column>[federated.listings].[none:PostalCode:nk]</column>
             <column>[federated.listings].[none:PropertySubType:nk]</column>
           </slices>
@@ -247,16 +337,26 @@
               <breakdown value='auto' />
             </view>
             <mark class='Bar' />
+            <encodings>
+              <text column='[federated.listings].[cnt:ListYrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
           </pane>
         </panes>
         <rows>[federated.listings].[cnt:ListYrMo:qk]</rows>
         <cols>[federated.listings].[tmn:ListingContractDate:qk]</cols>
       </table>
     </worksheet>
-    <worksheet name='Closed Sales'>
+    <worksheet name='Rates vs Median Price'>
       <layout-options>
         <title>
-          <formatted-text><run>Closed Sales per Month (all sold rows)</run></formatted-text>
+          <formatted-text><run>Median Close Price (top) vs National 30-yr Mortgage Rate (bottom)</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -265,74 +365,24 @@
             <datasource caption='Market Sold (Flagged)' name='federated.sold' />
           </datasources>
           <datasource-dependencies datasource='federated.sold'>
-            <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-            <column datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+            <column caption='Close Price' datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
+            <column caption='30-yr Mortgage Rate' datatype='real' name='[rate_30yr_fixed]' role='measure' type='quantitative' />
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
-
-            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[ClosePrice]' derivation='Count' name='[cnt:ClosePrice:qk]' pivot='key' type='quantitative' />
-            
-          </datasource-dependencies>
-          <filter class='categorical' column='[federated.sold].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-
-          <slices>
-            <column>[federated.sold].[none:City:nk]</column>
-            <column>[federated.sold].[none:CountyOrParish:nk]</column>
-            <column>[federated.sold].[none:PostalCode:nk]</column>
-            <column>[federated.sold].[none:PropertySubType:nk]</column>
-          </slices>
-          <aggregation value='true' />
-        </view>
-        <style />
-        <panes>
-          <pane>
-            <view>
-              <breakdown value='auto' />
-            </view>
-            <mark class='Bar' />
-          </pane>
-        </panes>
-        <rows>[federated.sold].[cnt:ClosePrice:qk]</rows>
-        <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
-      </table>
-    </worksheet>
-    <worksheet name='Rates and the Market'>
-      <layout-options>
-        <title>
-          <formatted-text><run>Median Close Price vs National 30-yr Mortgage Rate (stacked panes)</run></formatted-text>
-        </title>
-      </layout-options>
-      <table>
-        <view>
-          <datasources>
-            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
-          </datasources>
-          <datasource-dependencies datasource='federated.sold'>
-            <column datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
-            <column datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
-            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
-            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
-            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
-            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
-
             <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
             <column-instance column='[ClosePrice]' derivation='Median' name='[med:ClosePrice:qk]' pivot='key' type='quantitative' />
             <column-instance column='[rate_30yr_fixed]' derivation='Avg' name='[avg:rate_30yr_fixed:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
-          <filter class='categorical' column='[federated.sold].[none:City:nk]'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <slices>
-            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
             <column>[federated.sold].[none:PostalCode:nk]</column>
             <column>[federated.sold].[none:PropertySubType:nk]</column>
           </slices>
@@ -345,113 +395,859 @@
               <breakdown value='auto' />
             </view>
             <mark class='Line' />
+
           </pane>
         </panes>
         <rows>[federated.sold].[med:ClosePrice:qk] + [federated.sold].[avg:rate_30yr_fixed:qk]</rows>
         <cols>[federated.sold].[tmn:CloseDate:qk]</cols>
       </table>
     </worksheet>
+    <worksheet name='Closed Sales by County'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Closed Sales, Top 15 Counties (ranked by total sales)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Closed Sale' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+            <column caption='Rank' datatype='integer' name='[county_sold_rank]' role='dimension' type='ordinal' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[county_sold_rank]' derivation='None' name='[none:county_sold_rank:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[county_sold_rank]' derivation='None' name='[none:county_sold_rank:nk]' pivot='key' type='ordinal' />
+            <column-instance column='[YrMo]' derivation='Count' name='[cnt:YrMo:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='quantitative' column='[federated.sold].[none:county_sold_rank:qk]' included-values='in-range'><min>1</min><max>15</max></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+            <column>[federated.sold].[none:county_sold_rank:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <text column='[federated.sold].[cnt:YrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.sold].[none:county_sold_rank:nk] / [federated.sold].[none:CountyOrParish:nk])</rows>
+        <cols>[federated.sold].[cnt:YrMo:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='New Listings by Property Type'>
+      <layout-options>
+        <title>
+          <formatted-text><run>New Listings by Property Type (top 8)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Listings (Flagged)' name='federated.listings' />
+          </datasources>
+          <datasource-dependencies datasource='federated.listings'>
+            <column caption='New Listing' datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
+            <column caption='Rank' datatype='integer' name='[listing_subtype_rank]' role='dimension' type='ordinal' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[listing_subtype_rank]' derivation='None' name='[none:listing_subtype_rank:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[listing_subtype_rank]' derivation='None' name='[none:listing_subtype_rank:nk]' pivot='key' type='ordinal' />
+            <column-instance column='[ListYrMo]' derivation='Count' name='[cnt:ListYrMo:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.listings].[none:CountyOrParish:nk]' filter-group='5'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:City:nk]' filter-group='6'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PostalCode:nk]' filter-group='7'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PropertySubType:nk]' filter-group='8'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='quantitative' column='[federated.listings].[none:listing_subtype_rank:qk]' included-values='in-range'><min>1</min><max>8</max></filter>
+          <slices>
+            <column>[federated.listings].[none:CountyOrParish:nk]</column>
+            <column>[federated.listings].[none:City:nk]</column>
+            <column>[federated.listings].[none:PostalCode:nk]</column>
+            <column>[federated.listings].[none:PropertySubType:nk]</column>
+            <column>[federated.listings].[none:listing_subtype_rank:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <text column='[federated.listings].[cnt:ListYrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.listings].[none:listing_subtype_rank:nk] / [federated.listings].[none:PropertySubType:nk])</rows>
+        <cols>[federated.listings].[cnt:ListYrMo:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='KPI Median Price'>
+      <layout-options>
+        <title>
+          <formatted-text><run fontsize='10'>Median Close Price</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Close Price' datatype='real' name='[ClosePrice]' role='measure' type='quantitative' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[ClosePrice]' derivation='Median' name='[med:ClosePrice:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.sold].[med:ClosePrice:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Closed Sales'>
+      <layout-options>
+        <title>
+          <formatted-text><run fontsize='10'>Closed Sales</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Closed Sale' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='Count' name='[cnt:YrMo:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.sold].[cnt:YrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Days on Market'>
+      <layout-options>
+        <title>
+          <formatted-text><run fontsize='10'>Avg Days on Market (IQR-filtered)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Days on Market' datatype='real' name='[days_on_market]' role='measure' type='quantitative' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[days_on_market]' derivation='Avg' name='[avg:days_on_market:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+            <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.sold].[avg:days_on_market:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Ratio'>
+      <layout-options>
+        <title>
+          <formatted-text><run fontsize='10'>Avg Close-to-List Ratio (IQR-filtered)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Sold (Flagged)' name='federated.sold' />
+          </datasources>
+          <datasource-dependencies datasource='federated.sold'>
+            <column caption='Close-to-List Ratio' datatype='real' name='[price_ratio]' role='measure' type='quantitative' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[any_iqr_outlier_flag]' derivation='None' name='[none:any_iqr_outlier_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[price_ratio]' derivation='None' name='[none:price_ratio:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[price_ratio]' derivation='Avg' name='[avg:price_ratio:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.sold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.sold].[none:any_iqr_outlier_flag:ok]'><groupfilter function='member' level='[none:any_iqr_outlier_flag:ok]' member='0' /></filter>
+          <filter class='quantitative' column='[federated.sold].[none:price_ratio:qk]' included-values='in-range'><min>0</min><max>2</max></filter>
+          <slices>
+            <column>[federated.sold].[none:CountyOrParish:nk]</column>
+            <column>[federated.sold].[none:City:nk]</column>
+            <column>[federated.sold].[none:PostalCode:nk]</column>
+            <column>[federated.sold].[none:PropertySubType:nk]</column>
+            <column>[federated.sold].[none:any_iqr_outlier_flag:ok]</column>
+            <column>[federated.sold].[none:price_ratio:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.sold].[avg:price_ratio:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI New Listings'>
+      <layout-options>
+        <title>
+          <formatted-text><run fontsize='10'>New Listings</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Market Listings (Flagged)' name='federated.listings' />
+          </datasources>
+          <datasource-dependencies datasource='federated.listings'>
+            <column caption='New Listing' datatype='string' name='[ListYrMo]' role='dimension' type='nominal' />
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[ListYrMo]' derivation='Count' name='[cnt:ListYrMo:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.listings].[none:CountyOrParish:nk]' filter-group='5'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:City:nk]' filter-group='6'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PostalCode:nk]' filter-group='7'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.listings].[none:PropertySubType:nk]' filter-group='8'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <slices>
+            <column>[federated.listings].[none:CountyOrParish:nk]</column>
+            <column>[federated.listings].[none:City:nk]</column>
+            <column>[federated.listings].[none:PostalCode:nk]</column>
+            <column>[federated.listings].[none:PropertySubType:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.listings].[cnt:ListYrMo:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
   </worksheets>
   <dashboards>
-    <dashboard name='DB Monthly Median Close Price'>
+    <dashboard name='Market Pulse'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded).</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). Filters apply to every chart on this tab.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='Monthly Median Close Price' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='Monthly Median Close Price' param='[federated.sold].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='Monthly Median Close Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='Monthly Median Close Price' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='Monthly Median Close Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='9375' id='3' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='20000' x='0' y='0' />
+          <zone h='9375' id='4' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='20000' x='0' y='9375' />
+          <zone h='18750' id='5' name='KPI Median Price' w='20000' x='20000' y='0' />
+          <zone h='18750' id='6' name='KPI Closed Sales' w='20000' x='40000' y='0' />
+          <zone h='18750' id='7' name='KPI Days on Market' w='20000' x='60000' y='0' />
+          <zone h='18750' id='8' name='KPI Ratio' w='20000' x='80000' y='0' />
+          <zone h='38750' id='9' name='Median Close Price' w='50000' x='0' y='18750' />
+          <zone h='38750' id='10' name='Closed Sales' w='50000' x='50000' y='18750' />
+          <zone h='38750' id='11' name='Closed Sales by County' w='100000' x='0' y='57500' />
         </zone>
       </zones>
     </dashboard>
-    <dashboard name='DB Average Days on Market'>
+    <dashboard name='County'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded).</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). Filters apply to every chart on this tab.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='Average Days on Market' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='Average Days on Market' param='[federated.sold].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='Average Days on Market' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='Average Days on Market' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='Average Days on Market' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='9375' id='3' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='20000' x='0' y='0' />
+          <zone h='9375' id='4' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='20000' x='0' y='9375' />
+          <zone h='18750' id='5' name='KPI Median Price' w='20000' x='20000' y='0' />
+          <zone h='18750' id='6' name='KPI Closed Sales' w='20000' x='40000' y='0' />
+          <zone h='18750' id='7' name='KPI Days on Market' w='20000' x='60000' y='0' />
+          <zone h='18750' id='8' name='KPI Ratio' w='20000' x='80000' y='0' />
+          <zone h='38750' id='9' name='Median Close Price' w='50000' x='0' y='18750' />
+          <zone h='38750' id='10' name='Close-to-List Ratio' w='50000' x='50000' y='18750' />
+          <zone h='38750' id='11' name='Days on Market' w='50000' x='0' y='57500' />
+          <zone h='38750' id='12' name='Closed Sales' w='50000' x='50000' y='57500' />
         </zone>
       </zones>
     </dashboard>
-    <dashboard name='DB Avg Close-to-Original-List Ratio'>
+    <dashboard name='City'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded).</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). Filters apply to every chart on this tab.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='Average Close-to-Original-List Ratio' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='Average Close-to-Original-List Ratio' param='[federated.sold].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='Average Close-to-Original-List Ratio' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='Average Close-to-Original-List Ratio' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='Average Close-to-Original-List Ratio' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='6250' id='3' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='20000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:City:nk]' type-v2='filter' w='20000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='20000' x='0' y='12500' />
+          <zone h='18750' id='6' name='KPI Median Price' w='20000' x='20000' y='0' />
+          <zone h='18750' id='7' name='KPI Closed Sales' w='20000' x='40000' y='0' />
+          <zone h='18750' id='8' name='KPI Days on Market' w='20000' x='60000' y='0' />
+          <zone h='18750' id='9' name='KPI Ratio' w='20000' x='80000' y='0' />
+          <zone h='38750' id='10' name='Median Close Price' w='50000' x='0' y='18750' />
+          <zone h='38750' id='11' name='Close-to-List Ratio' w='50000' x='50000' y='18750' />
+          <zone h='38750' id='12' name='Days on Market' w='50000' x='0' y='57500' />
+          <zone h='38750' id='13' name='Closed Sales' w='50000' x='50000' y='57500' />
         </zone>
       </zones>
     </dashboard>
-    <dashboard name='DB New Listings'>
+    <dashboard name='Zip'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS listings, Jan 2024 - Jun 2026, N=504,162 (all rows -- counts are never outlier-filtered).</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). Filters apply to every chart on this tab.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='New Listings' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='New Listings' param='[federated.listings].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='New Listings' param='[federated.listings].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='New Listings' param='[federated.listings].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='New Listings' param='[federated.listings].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='6250' id='3' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='20000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='20000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Median Close Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='20000' x='0' y='12500' />
+          <zone h='18750' id='6' name='KPI Median Price' w='20000' x='20000' y='0' />
+          <zone h='18750' id='7' name='KPI Closed Sales' w='20000' x='40000' y='0' />
+          <zone h='18750' id='8' name='KPI Days on Market' w='20000' x='60000' y='0' />
+          <zone h='18750' id='9' name='KPI Ratio' w='20000' x='80000' y='0' />
+          <zone h='38750' id='10' name='Median Close Price' w='50000' x='0' y='18750' />
+          <zone h='38750' id='11' name='Close-to-List Ratio' w='50000' x='50000' y='18750' />
+          <zone h='38750' id='12' name='Days on Market' w='50000' x='0' y='57500' />
+          <zone h='38750' id='13' name='Closed Sales' w='50000' x='50000' y='57500' />
         </zone>
       </zones>
     </dashboard>
-    <dashboard name='DB Closed Sales'>
+    <dashboard name='New Listings'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded).</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS listings, Jan 2024 - Jun 2026, N=504,162 (all rows; counts are never outlier-filtered). Filters apply to every chart on this tab.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='Closed Sales' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='Closed Sales' param='[federated.sold].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='Closed Sales' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='Closed Sales' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='Closed Sales' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='7500' id='3' mode='checkdropdown' name='New Listings by Month' param='[federated.listings].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='7500' id='4' mode='checkdropdown' name='New Listings by Month' param='[federated.listings].[none:City:nk]' type-v2='filter' w='22000' x='0' y='7500' />
+          <zone h='7500' id='5' mode='checkdropdown' name='New Listings by Month' param='[federated.listings].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='15000' />
+          <zone h='7500' id='6' mode='checkdropdown' name='New Listings by Month' param='[federated.listings].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='22500' />
+          <zone h='30000' id='7' name='KPI New Listings' w='20000' x='22000' y='0' />
+          <zone h='30000' id='8' name='New Listings by Property Type' w='58000' x='42000' y='0' />
+          <zone h='66250' id='9' name='New Listings by Month' w='100000' x='0' y='30000' />
         </zone>
       </zones>
     </dashboard>
-    <dashboard name='DB Rates and the Market'>
+    <dashboard name='Rates and the Market'>
       <style />
-      <size maxheight='850' maxwidth='1250' minheight='850' minwidth='1250' />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          <zone h='6000' id='2' type-v2='text' w='84000' x='0' y='0'>
-            <formatted-text><run>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). 30-yr rate is the U.S. national monthly average, not CA-specific; geographic filters move only the price line.</run></formatted-text>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, N=455,449. Medians and counts use all rows; averages are IQR-filtered (~15% excluded). Filters apply to every chart on this tab. 30-yr rate = U.S. national monthly average (FRED), not CA-specific; geographic filters move only the price line.</run></formatted-text>
           </zone>
-          <zone h='94000' id='3' name='Rates and the Market' w='84000' x='0' y='6000' />
-          <zone h='12000' id='4' mode='checkdropdown' name='Rates and the Market' param='[federated.sold].[none:City:nk]' type-v2='filter' w='16000' x='84000' y='6000' />
-          <zone h='12000' id='5' mode='checkdropdown' name='Rates and the Market' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='16000' x='84000' y='18000' />
-          <zone h='12000' id='6' mode='checkdropdown' name='Rates and the Market' param='[federated.sold].[none:PostalCode:nk]' type-v2='filter' w='16000' x='84000' y='30000' />
-          <zone h='12000' id='7' mode='checkdropdown' name='Rates and the Market' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='16000' x='84000' y='42000' />
+          <zone h='9375' id='3' mode='checkdropdown' name='Rates vs Median Price' param='[federated.sold].[none:CountyOrParish:nk]' type-v2='filter' w='25000' x='0' y='0' />
+          <zone h='9375' id='4' mode='checkdropdown' name='Rates vs Median Price' param='[federated.sold].[none:PropertySubType:nk]' type-v2='filter' w='25000' x='0' y='9375' />
+          <zone h='18750' id='5' name='KPI Median Price' w='37500' x='25000' y='0' />
+          <zone h='18750' id='6' name='KPI Closed Sales' w='37500' x='62500' y='0' />
+          <zone h='77500' id='7' name='Rates vs Median Price' w='100000' x='0' y='18750' />
         </zone>
       </zones>
     </dashboard>
   </dashboards>
   <windows>
-    <window class='worksheet' maximized='true' name='Monthly Median Close Price'>
+    <window class='dashboard' maximized='true' name='Market Pulse'>
+      <viewpoints>
+        <viewpoint name='KPI Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Median Close Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Closed Sales by County'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='County'>
+      <viewpoints>
+        <viewpoint name='KPI Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Median Close Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Close-to-List Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='City'>
+      <viewpoints>
+        <viewpoint name='KPI Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Median Close Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Close-to-List Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Zip'>
+      <viewpoints>
+        <viewpoint name='KPI Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Median Close Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Close-to-List Ratio'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Days on Market'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='New Listings'>
+      <viewpoints>
+        <viewpoint name='KPI New Listings'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='New Listings by Property Type'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='New Listings by Month'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Rates and the Market'>
+      <viewpoints>
+        <viewpoint name='KPI Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Closed Sales'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Rates vs Median Price'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='worksheet' hidden='true' name='Median Close Price'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Close-to-List Ratio'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Days on Market'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Closed Sales'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='New Listings by Month'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Rates vs Median Price'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Closed Sales by County'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='New Listings by Property Type'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Median Price'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Closed Sales'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Days on Market'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Ratio'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI New Listings'>
       <cards>
         <edge name='left'>
           <strip size='160'>

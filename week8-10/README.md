@@ -6,55 +6,59 @@
 
 | File | What it is |
 |---|---|
-| `make_extracts.py` | Packages the Week 7 flagged datasets into Tableau's native extract format: `market_sold.hyper` (455,449 rows × 12 cols) and `market_listings.hyper` (504,162 × 7). Dates land as true dates — string months would sort alphabetically (Apr, Aug, Dec…), a classic silent bug. |
-| `make_market_workbook.py` | Writes `market_analysis.twb` from scratch: 2 embedded-extract datasources, 6 worksheets, 6 dashboards, filter cards, provenance notes. |
+| `make_extracts.py` | Packages the Week 7 flagged datasets into Tableau's native extract format: `market_sold.hyper` (455,449 rows × 13 cols) and `market_listings.hyper` (504,162 × 8), including precomputed rank columns (county by closed sales, property type by listings) so ranked bar charts need only a range filter. Dates land as true dates — string months would sort alphabetically (Apr, Aug, Dec…), a classic silent bug. |
+| `make_market_workbook.py` | Writes `market_analysis.twb` from scratch: 2 embedded-extract datasources, 13 worksheets (charts + KPI tiles), 6 geography-organized dashboards at Fixed 1000×800, linked filter cards, direct labels, provenance notes. `--show-sheets` builds a dev copy with worksheets visible. |
 | `market_analysis.twb` | The generated workbook **structure** — pure XML, verified to contain **zero data rows**, which is why it can live in a public repo. The data-bearing `.twbx` and `.hyper` files are gitignored and stay local. |
 
-## The six dashboards
+## The six dashboards (v2 — the program's dashboard standard)
 
-The five required monthly views (Jan 2024 – Jun 2026, each filterable by City, County, Zip, and PropertySubType) plus one of our own design:
+Rebuilt Aug 27 to the director's published standard and reference workbook: **desktop Fixed 1000×800**, dashboards organized by **geography** with 3–5 charts each, **KPI tiles top-left**, **one dropdown driving every chart on the tab** (Tableau's `filter-group` linkage, generated), **direct rounded labels** ($0.82M / 0.995 / 27), and **worksheets hidden** so only the dashboards publish as tabs.
 
-1. **Monthly Median Close Price** — line; all rows (medians are robust to outliers)
-2. **Average Days on Market** — line; IQR-filtered, because one 12,430-day artifact moves a monthly mean by days
-3. **Average Close-to-Original-List Ratio** — line; IQR-filtered **plus a (0, 2] ratio range filter**. The IQR flag fences price/area/DOM but not the ratio itself, and 552 surviving rows (0.14%) carry data-entry ratios above 2× (max: 1,077,419× — a $1 original list price), enough to push a monthly average to 170.95. With the range filter the line sits where it should: 0.98–1.02 (median ratio is exactly 1.0000). The exclusion is disclosed in the chart subtitle.
-4. **New Listings** — bars; counted by *listing* date, all rows
-5. **Closed Sales** — bars; counted by *close* date, all rows
-6. **Rates and the Market** (own design) — median price and the national 30-yr mortgage rate as **two stacked panes** on a shared month axis (never a dual axis); uses the FRED enrichment from Weeks 2–3
+| Tab | The one question it answers | What's on it |
+|---|---|---|
+| **Market Pulse** | What is the California market doing right now, and where? | 4 KPIs (median price, closed sales, avg DOM, avg ratio) · median price by month · closed sales by month · top-15 counties by closed sales (ranked) |
+| **County** | How is the selected county trending? | County + property-type dropdowns · 4 KPIs · median price · close-to-list ratio · days on market · closed sales |
+| **City** | How is the selected city trending? | County + City + property-type dropdowns · same stack |
+| **Zip** | How is the selected zip trending? | County + Zip + property-type dropdowns · same stack |
+| **New Listings** | How much new supply is coming, and of what type? | 4 dropdowns (listings data) · KPI · new listings by month · top-8 property types (ranked) |
+| **Rates and the Market** (own design) | Do CA prices move with the national 30-yr mortgage rate? | median price and the FRED rate as **two stacked panes** on a shared month axis — never a dual axis |
 
-**The nuance rule in one line:** medians and counts use *all* rows (counts must never silently lose 15% of real transactions); *averages* use the IQR-filtered base with a subtitle saying so. Every dashboard carries a one-line provenance note disclosing the split.
+All five handbook-required monthly views (median close price, average DOM, average close-to-original-list ratio, new listings, closed sales) appear on the geography tabs, filterable by City / County / Zip / PropertySubType — the requirement attaches to the *views*, and organizing them by geography is how the director's own reference workbook does it.
 
-## The six dashboards, rendered
+**The nuance rule in one line:** medians and counts use *all* rows (counts must never silently lose 15% of real transactions); *averages* use the IQR-filtered base with a subtitle saying so, and the ratio additionally excludes 552 data-entry rows above 2× (0.14%, disclosed). Every tab carries a one-line provenance note.
 
-1 — Monthly Median Close Price (all rows):
+## The six tabs, rendered
 
-![Monthly median close price](img/db_monthly_median_close_price.png)
+Market Pulse:
 
-2 — Average Days on Market (IQR-filtered):
+![Market Pulse](img/tab1_market_pulse.png)
 
-![Average days on market](img/db_average_days_on_market.png)
+County:
 
-3 — Average Close-to-Original-List Ratio (IQR-filtered + disclosed (0, 2] ratio bound):
+![County](img/tab2_county.png)
 
-![Average close-to-original-list ratio](img/db_avg_close_to_list_ratio.png)
+City:
 
-4 — New Listings by listing contract date (all rows):
+![City](img/tab3_city.png)
 
-![New listings per month](img/db_new_listings.png)
+Zip:
 
-5 — Closed Sales by close date (all rows):
+![Zip](img/tab4_zip.png)
 
-![Closed sales per month](img/db_closed_sales.png)
+New Listings:
 
-6 — Rates and the Market (own design — stacked panes, never a dual axis):
+![New Listings](img/tab5_new_listings.png)
 
-![Median close price vs national 30-yr mortgage rate](img/db_rates_and_the_market.png)
+Rates and the Market (own design):
+
+![Rates and the Market](img/tab6_rates_and_the_market.png)
 
 ## How to run
 
 ```bash
 pip install tableauhyperapi
 python3 make_extracts.py           # writes the two .hyper extracts to ~/idx-exchange/tableau/
-python3 make_market_workbook.py    # writes market_analysis.twb
+python3 make_market_workbook.py    # writes market_analysis.twb (add --show-sheets for a dev build)
 open -a "Tableau Public" ~/idx-exchange/tableau/market_analysis.twb
 ```
 
@@ -72,6 +76,7 @@ The last fixes came from **extracting ground truth from Tableau's own bundled Su
 
 ## Status & what's deliberately not here
 
-- ✅ Workbook opens clean in Tableau Public 2026.2; worksheets render with pipeline-matching numbers (median price ~$740K → $850K → $780–810K across the 30 months); dashboards populated with working filters.
+- ✅ Workbook opens clean in Tableau Public 2026.2; KPI tiles read $0.82M / 455,449 / 27 days / 0.995 statewide (pipeline-matching); six dashboards with linked dropdowns, direct labels, and rounded formats, generated end-to-end by code.
+- 🔧 Two more grammar rules learned in v2: a dashboard window must list a `viewpoint` for **every** sheet it contains (otherwise "sheet has no visual representation"), and a KPI tile is an empty-shelf sheet with the measure on Text and its font set at the worksheet `cell` level.
 - 📤 **Publishing goes to Tableau Public** per the program's August 24 directive (show Tableau progress on Tableau Public rather than committing workbook files). Published per the program's guidance: worksheets hidden, dashboards only, desktop layout.
 - ⏭️ Weeks 9–10: `competitive_analysis.twbx` — top-100 agents/offices (where the office-name normalization and NONMEMBER-sentinel exclusion get used), the two zip-code heat maps, and the competitive own-design dashboard.

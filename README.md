@@ -43,7 +43,7 @@ week8-10/
   market_analysis.twb      # the generated workbook STRUCTURE (XML — contains no data rows)
 ```
 
-Data CSVs, Excel files, Tableau `.twbx` workbooks, and `.hyper` extracts are gitignored — this repo holds code and documentation only. The committed `.twb` is pure XML structure (chart definitions, no data rows); the data-bearing `.twbx` deliverable lives locally until publishing is cleared.
+Data CSVs, Excel files, Tableau `.twbx` workbooks, and `.hyper` extracts are gitignored — this repo holds code and documentation only. The committed `.twb` is pure XML structure (chart definitions, no data rows); per the program's direction, the data-bearing workbook is published to Tableau Public rather than committed.
 
 ## The two-pipeline model
 
@@ -59,9 +59,8 @@ There are two canonical **raw** datasets — `listings.csv` and `sold.csv` — w
 1. Run the two extraction scripts → update the two raw datasets.
 2. Run the downstream stages (Weeks 2–7) to produce the enriched, flagged datasets.
 3. Weeks 8–10: `make_extracts.py` packages the Week 7 flagged data into `.hyper` extracts, and the workbook generators write the Tableau workbooks as XML — opened and reviewed in **Tableau Public Desktop 2026.2**.
-4. Save the full working workbook locally as a `.twbx` (all worksheets visible).
-5. Save a second `.twbx` with worksheets hidden and only dashboards visible.
-6. Weeks 11–12: publish that version to **public.tableau.com** (pending the data-policy confirmation, using pre-aggregated extracts only).
+4. The generator's default build hides worksheets so only dashboards show as tabs (`--show-sheets` for a dev build with everything visible).
+5. Publish to **public.tableau.com** from Tableau Public Desktop (File → Save to Tableau Public) — the program's progress surface for the Tableau weeks.
 
 ## How to run
 
@@ -100,8 +99,8 @@ python3 week7/iqr_outlier_filtering.py
 # (needs tableauhyperapi; the .twb opens in Tableau Public 2026.2):
 pip install tableauhyperapi
 python3 week8-10/make_extracts.py
-python3 week8-10/make_market_workbook.py
-open week8-10/market_analysis.twb   # or open the copy in ~/idx-exchange/tableau/
+python3 week8-10/make_market_workbook.py          # add --show-sheets for a dev build
+open -a "Tableau Public" ~/idx-exchange/tableau/market_analysis.twb
 ```
 
 ---
@@ -361,11 +360,11 @@ Two scripts in `week8-10/`:
 
 **A data-quality catch the dashboards themselves surfaced:** the first live render of the ratio view showed monthly averages spiking to 170 — impossible for a close-to-list ratio. The cause: the Week 7 IQR flag fences price, living area, and days-on-market, but **not the ratio itself**, so 552 surviving rows (0.14% of the IQR-kept base) with data-entry ratios above 2× (worst case 1,077,419× — a $1 original list price) poisoned the average. The fix is a disclosed (0, 2] range filter on the ratio worksheet only: median ratio is exactly 1.0000, and the monthly average now lands where the market actually is, 0.98–1.02. This is exactly why the averages-need-guarding rule exists — and why medians never needed one.
 
-Two of the six rendered dashboards (all six are in [week8-10/README.md](week8-10/README.md)):
+**Week 9 rebuild (Aug 27) — to the program's dashboard standard.** The director's guidance (desktop Fixed 1000×800, KPIs top-left, 3–5 charts per dashboard, one dropdown driving every chart, direct rounded labels, worksheets hidden on publish) and his reference workbook organize dashboards by *geography*, not by metric. The generator was rebuilt accordingly: six tabs — Market Pulse, County, City, Zip, New Listings, Rates and the Market — each with KPI tiles, linked filters (Tableau's `filter-group` mechanism, discovered in its bundled Superstore workbook), and precomputed rank columns in the extracts so "top-15 counties" and "top-8 property types" sort by value with plain range filters. All five required monthly views live on the geography tabs. Two of the six (all six in [week8-10/README.md](week8-10/README.md)):
 
-![Average close-to-original-list ratio dashboard, after the ratio range fix](week8-10/img/db_avg_close_to_list_ratio.png)
+![County tab — dropdowns, four KPI tiles, four directly-labeled charts](week8-10/img/tab2_county.png)
 
-![Rates and the Market own-design dashboard — median close price and national 30-yr mortgage rate as stacked panes](week8-10/img/db_rates_and_the_market.png)
+![Market Pulse — statewide KPIs, median price, closed sales, top-15 counties](week8-10/img/tab1_market_pulse.png)
 
 **Publishing:** per the program's August 24 directive, Tableau progress is shown by publishing to Tableau Public rather than committing workbook files — the repo keeps the *generator code* and the data-free `.twb` structure, and the published workbook lives on the Tableau Public profile (worksheets hidden, dashboards only, per the program's publishing guidance).
 
