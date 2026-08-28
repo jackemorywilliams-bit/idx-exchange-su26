@@ -1,6 +1,6 @@
 # Weeks 8–10 — Tableau Dashboard Development
 
-**Goal:** the two required Tableau workbooks — `market_analysis.twbx` (this folder, Week 8 ✅) and `competitive_analysis.twbx` (Weeks 9–10, upcoming) — built as **workbooks-as-code**: Python generates the data extracts and the workbook XML, Tableau just opens the result.
+**Goal:** the two required Tableau workbooks — `market_analysis` (Week 8–9 ✅) and `competitive_analysis` (Weeks 9–10 ✅) — built as **workbooks-as-code**: Python generates the data extracts and the workbook XML, Tableau just opens the result.
 
 ## What's in this folder
 
@@ -9,6 +9,9 @@
 | `make_extracts.py` | Packages the Week 7 flagged datasets into Tableau's native extract format: `market_sold.hyper` (455,449 rows × 13 cols) and `market_listings.hyper` (504,162 × 8), including precomputed rank columns (county by closed sales, property type by listings) so ranked bar charts need only a range filter. Dates land as true dates — string months would sort alphabetically (Apr, Aug, Dec…), a classic silent bug. |
 | `make_market_workbook.py` | Writes `market_analysis.twb` from scratch: 2 embedded-extract datasources, 13 worksheets (charts + KPI tiles), 6 geography-organized dashboards at Fixed 1000×800, linked filter cards, direct labels, provenance notes. `--show-sheets` builds a dev copy with worksheets visible. |
 | `market_analysis.twb` | The generated workbook **structure** — pure XML, verified to contain **zero data rows**, which is why it can live in a public repo. The data-bearing `.twbx` and `.hyper` files are gitignored and stay local. |
+| `make_competitive_extracts.py` | Builds the competitive extracts: a row-level sold extract with normalized office keys, sentinel flag and statewide ranks (455,449 × 15); a precomputed top-100 listing-agents table (156 rows — union of the units and volume rankings); and a monthly brokerage-share table (390 rows, 12 brands + Others). Documents the entity-resolution rules. |
+| `make_competitive_workbook.py` | Writes `competitive_analysis.twb`: 12 worksheets, 7 dashboards (four ranked tables, two zip heat maps, the own-design "Brokerage Power" tab). |
+| `competitive_analysis.twb` | Generated structure of the competitive workbook — data-free XML. |
 
 ## The six dashboards (v2 — the program's dashboard standard)
 
@@ -53,13 +56,29 @@ Rates and the Market (own design):
 
 ![Rates and the Market](img/tab6_rates_and_the_market.png)
 
+## The competitive workbook (Weeks 9–10)
+
+| Tab | Handbook requirement | What's on it |
+|---|---|---|
+| **Top Agents (Units)** / **(Volume)** | Top 100 listing agents by sales volume and units | Ranked table — Rank · Listing Agent, Office · Units Sold · Sales Volume · Market Share % (the director's reference columns); statewide, precomputed |
+| **Top Offices (Units)** / **(Volume)** | Top 100 listing offices … filterable by city, county, zip, PropertySubType | Ranked table of the statewide top 100, with County / City / Zip / Property Type dropdowns; Market Share % recomputes within the selection |
+| **Median Price by Zip** / **Homes Sold by Zip** | Zip-code heat maps, filterable by month + the four dimensions | Zip × month color grids (Tableau's heat-map mark) for the 60 busiest zips, with Month / County / City / Zip / Property Type dropdowns |
+| **Brokerage Power** (own design) | One competitive dashboard of your own design | KPIs (Compass share of listing sides 2026 H1 **7.9%** · Compass 2024 volume **$23.7B** · Real Broker share **2.3%** · Opendoor listing sides 2026 H1 **109**) · monthly share lines for seven brands · Opendoor's listing sides by month |
+
+**Entity resolution (documented in the extracts script):** office names upper-cased, trimmed, whitespace-collapsed (19,269 raw strings → 18,615 offices); agents keyed as name + office (the program case study's convention); 255 placeholder records (NONMEMBER etc., 0.06%) excluded from every ranking and share denominator. Units are closed sales (never outlier-filtered); volume is the sum of close price. Brokerage brands are resolved by contains-rules on the normalized office name (Compass, Keller Williams, Coldwell Banker, RE/MAX, eXp, Berkshire Hathaway, Century 21, Sotheby's, Redfin, Real Broker, Equity Union, Opendoor, Others).
+
+**What it shows:** Compass is #1 by volume and still gaining share (7.3% → 8.0% of listing sides, 2024 → 2026 H1); Keller Williams and RE/MAX are losing share; Real Broker and Equity Union are the fastest risers; Opendoor's listing activity collapsed from a 109-a-month peak to 14 by mid-2026 (2026 shown as January–June only, never annualized).
+
 ## How to run
 
 ```bash
 pip install tableauhyperapi
 python3 make_extracts.py           # writes the two .hyper extracts to ~/idx-exchange/tableau/
 python3 make_market_workbook.py    # writes market_analysis.twb (add --show-sheets for a dev build)
+python3 make_competitive_extracts.py   # competitive_sold / top_agents / brokerage_monthly .hyper
+python3 make_competitive_workbook.py   # writes competitive_analysis.twb
 open -a "Tableau Public" ~/idx-exchange/tableau/market_analysis.twb
+open -a "Tableau Public" ~/idx-exchange/tableau/competitive_analysis.twb
 ```
 
 ## What it took — the five validator iterations
@@ -79,4 +98,4 @@ The last fixes came from **extracting ground truth from Tableau's own bundled Su
 - ✅ Workbook opens clean in Tableau Public 2026.2; KPI tiles read $0.82M / 455,449 / 27 days / 0.995 statewide (pipeline-matching); six dashboards with linked dropdowns, direct labels, and rounded formats, generated end-to-end by code.
 - 🔧 Two more grammar rules learned in v2: a dashboard window must list a `viewpoint` for **every** sheet it contains (otherwise "sheet has no visual representation"), and a KPI tile is an empty-shelf sheet with the measure on Text and its font set at the worksheet `cell` level.
 - 📤 **Published:** [CA Market Analysis on Tableau Public](https://public.tableau.com/app/profile/emory.williams/viz/CAMarketAnalysis_17878744698360/MarketPulse) — per the program's August 24 directive (Tableau progress lives on Tableau Public rather than in committed workbook files); worksheets hidden, dashboards as tabs, desktop layout.
-- ⏭️ Weeks 9–10: `competitive_analysis.twbx` — top-100 agents/offices (where the office-name normalization and NONMEMBER-sentinel exclusion get used), the two zip-code heat maps, and the competitive own-design dashboard.
+- ✅ Weeks 9–10: `competitive_analysis` built (four ranked tables, two zip heat maps, Brokerage Power). Grammar learned: the 2026 validator rejects the old `computed-sort` element (tables are ordered by precomputed rank columns instead); Tableau's auto-generated map geometry can't be authored from code, so the zip heat maps are zip × month color grids; 100-row tables need `fit-width` viewpoints so they scroll instead of squeezing.

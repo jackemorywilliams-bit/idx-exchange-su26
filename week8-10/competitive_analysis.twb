@@ -1,0 +1,1181 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<workbook source-build='20262.26.0708.1337' source-platform='mac' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <datasources>
+    <datasource caption='Competitive Sold (row-level)' inline='true' name='federated.csold' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='Competitive Sold (row-level)' name='hyper.federated.csold'>
+            <connection class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/competitive_sold.hyper' schema='Extract' sslmode='' username='tableau_internal_user' />
+          </named-connection>
+        </named-connections>
+        <relation connection='hyper.federated.csold' name='Extract' table='[Extract].[Extract]' type='table' />
+      </connection>
+      <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
+      <column caption='Month' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+      <column caption='Sales Volume' datatype='real' default-format='c&quot;$&quot;#,##0,,.00M;(&quot;$&quot;#,##0,,.00M)' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column datatype='string' name='[City]' role='dimension' type='nominal' />
+      <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
+      <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' semantic-role='[ZipCode].[Name]' type='nominal' />
+      <column caption='Property Type' datatype='string' name='[PropertySubType]' role='dimension' type='nominal' />
+      <column caption='Listing Office' datatype='string' name='[office_display]' role='dimension' type='nominal' />
+      <column caption='Units Sold' datatype='integer' default-format='n#,##0;-#,##0' name='[unit]' role='measure' type='quantitative' />
+      <column datatype='string' name='[office_key]' role='dimension' type='nominal' />
+      <column caption='Brokerage' datatype='string' name='[brokerage]' role='dimension' type='nominal' />
+      <column datatype='integer' name='[sentinel_flag]' role='dimension' type='ordinal' />
+      <column datatype='integer' name='[zip_rank]' role='dimension' type='ordinal' />
+      <column caption='Rank' datatype='integer' name='[office_rank_units]' role='dimension' type='ordinal' />
+      <column caption='Rank' datatype='integer' name='[office_rank_volume]' role='dimension' type='ordinal' />
+      <column caption='Market Share %' datatype='real' default-format='n#,##0.00&quot;%&quot;;-#,##0.00&quot;%&quot;' name='[Calculation_share]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='SUM([unit]) / SUM({ EXCLUDE [office_display] : SUM([unit]) }) * 100' />
+      </column>
+      <extract count='-1' enabled='true' units='records'>
+        <connection access_mode='readonly' class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/competitive_sold.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' username='tableau_internal_user'>
+          <relation name='Extract' table='[Extract].[Extract]' type='table' />
+        </connection>
+      </extract>
+    </datasource>
+    <datasource caption='Top Listing Agents (precomputed)' inline='true' name='federated.agents' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='Top Listing Agents (precomputed)' name='hyper.federated.agents'>
+            <connection class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/top_agents.hyper' schema='Extract' sslmode='' username='tableau_internal_user' />
+          </named-connection>
+        </named-connections>
+        <relation connection='hyper.federated.agents' name='Extract' table='[Extract].[Extract]' type='table' />
+      </connection>
+      <column caption='Listing Agent, Office' datatype='string' name='[display]' role='dimension' type='nominal' />
+      <column caption='Units Sold' datatype='integer' default-format='n#,##0;-#,##0' name='[units]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='c&quot;$&quot;#,##0,,.00M;(&quot;$&quot;#,##0,,.00M)' name='[volume]' role='measure' type='quantitative' />
+      <column caption='Market Share % (units)' datatype='real' default-format='n#,##0.00&quot;%&quot;;-#,##0.00&quot;%&quot;' name='[share_units_pct]' role='measure' type='quantitative' />
+      <column caption='Market Share % (volume)' datatype='real' default-format='n#,##0.00&quot;%&quot;;-#,##0.00&quot;%&quot;' name='[share_volume_pct]' role='measure' type='quantitative' />
+      <column caption='Rank' datatype='integer' name='[rank_units]' role='dimension' type='ordinal' />
+      <column caption='Rank' datatype='integer' name='[rank_volume]' role='dimension' type='ordinal' />
+      <extract count='-1' enabled='true' units='records'>
+        <connection access_mode='readonly' class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/top_agents.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' username='tableau_internal_user'>
+          <relation name='Extract' table='[Extract].[Extract]' type='table' />
+        </connection>
+      </extract>
+    </datasource>
+    <datasource caption='Brokerage Monthly Share (precomputed)' inline='true' name='federated.brokerages' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='Brokerage Monthly Share (precomputed)' name='hyper.federated.brokerages'>
+            <connection class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/brokerage_monthly.hyper' schema='Extract' sslmode='' username='tableau_internal_user' />
+          </named-connection>
+        </named-connections>
+        <relation connection='hyper.federated.brokerages' name='Extract' table='[Extract].[Extract]' type='table' />
+      </connection>
+      <column caption='Brokerage' datatype='string' name='[brokerage]' role='dimension' type='nominal' />
+      <column caption='Month' datatype='date' name='[month]' role='dimension' type='ordinal' />
+      <column datatype='string' name='[YrMo]' role='dimension' type='nominal' />
+      <column caption='Listing Sides' datatype='integer' default-format='n#,##0;-#,##0' name='[sides]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='c&quot;$&quot;#,##0,,,.0B;(&quot;$&quot;#,##0,,,.0B)' name='[volume]' role='measure' type='quantitative' />
+      <column caption='Share of Listing Sides' datatype='real' default-format='n#,##0.0&quot;%&quot;;-#,##0.0&quot;%&quot;' name='[share_pct]' role='measure' type='quantitative' />
+      <extract count='-1' enabled='true' units='records'>
+        <connection access_mode='readonly' class='hyper' dbname='/Users/emorywilliams/idx-exchange/tableau/brokerage_monthly.hyper' default-settings='yes' schema='Extract' sslmode='' tablename='Extract' username='tableau_internal_user'>
+          <relation name='Extract' table='[Extract].[Extract]' type='table' />
+        </connection>
+      </extract>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name='Agents by Units'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Top 100 Listing Agents by Units Sold (statewide, Jan 2024 - Jun 2026)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Top Listing Agents (precomputed)' name='federated.agents' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.agents'>
+            <column-instance column='[display]' derivation='None' name='[none:display:nk]' pivot='key' type='nominal' />
+            <column-instance column='[rank_units]' derivation='None' name='[none:rank_units:nk]' pivot='key' type='nominal' />
+            <column-instance column='[rank_units]' derivation='None' name='[none:rank_units:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[units]' derivation='Sum' name='[sum:units:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[volume]' derivation='Sum' name='[sum:volume:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[share_units_pct]' derivation='Sum' name='[sum:share_units_pct:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.agents].[:Measure Names]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:units:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:volume:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:share_units_pct:qk]&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='quantitative' column='[federated.agents].[none:rank_units:qk]' included-values='in-range'><min>1</min><max>100</max></filter>
+          <slices>
+            <column>[federated.agents].[:Measure Names]</column>
+            <column>[federated.agents].[none:rank_units:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.agents].[Multiple Values]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>([federated.agents].[none:rank_units:nk] / [federated.agents].[none:display:nk])</rows>
+        <cols>[federated.agents].[:Measure Names]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Agents by Volume'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Top 100 Listing Agents by Sales Volume (statewide, Jan 2024 - Jun 2026)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Top Listing Agents (precomputed)' name='federated.agents' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.agents'>
+            <column-instance column='[display]' derivation='None' name='[none:display:nk]' pivot='key' type='nominal' />
+            <column-instance column='[rank_volume]' derivation='None' name='[none:rank_volume:nk]' pivot='key' type='nominal' />
+            <column-instance column='[rank_volume]' derivation='None' name='[none:rank_volume:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[units]' derivation='Sum' name='[sum:units:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[volume]' derivation='Sum' name='[sum:volume:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[share_volume_pct]' derivation='Sum' name='[sum:share_volume_pct:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.agents].[:Measure Names]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:units:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:volume:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.agents].[sum:share_volume_pct:qk]&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='quantitative' column='[federated.agents].[none:rank_volume:qk]' included-values='in-range'><min>1</min><max>100</max></filter>
+          <slices>
+            <column>[federated.agents].[:Measure Names]</column>
+            <column>[federated.agents].[none:rank_volume:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.agents].[Multiple Values]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>([federated.agents].[none:rank_volume:nk] / [federated.agents].[none:display:nk])</rows>
+        <cols>[federated.agents].[:Measure Names]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Offices by Units'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Top 100 Listing Offices by Units Sold -- ranked statewide; filters show each office's activity within your selection</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.csold'>
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[office_display]' derivation='None' name='[none:office_display:nk]' pivot='key' type='nominal' />
+            <column-instance column='[sentinel_flag]' derivation='None' name='[none:sentinel_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[office_rank_units]' derivation='None' name='[none:office_rank_units:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[office_rank_units]' derivation='None' name='[none:office_rank_units:nk]' pivot='key' type='nominal' />
+            <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[ClosePrice]' derivation='Sum' name='[sum:ClosePrice:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_share]' derivation='User' name='[usr:Calculation_share:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.csold].[:Measure Names]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[sum:unit:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[sum:ClosePrice:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[usr:Calculation_share:qk]&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.csold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:sentinel_flag:ok]'><groupfilter function='member' level='[none:sentinel_flag:ok]' member='0' /></filter>
+          <filter class='quantitative' column='[federated.csold].[none:office_rank_units:qk]' included-values='in-range'><min>1</min><max>100</max></filter>
+          <slices>
+            <column>[federated.csold].[none:CountyOrParish:nk]</column>
+            <column>[federated.csold].[none:City:nk]</column>
+            <column>[federated.csold].[none:PostalCode:nk]</column>
+            <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[:Measure Names]</column>
+            <column>[federated.csold].[none:sentinel_flag:ok]</column>
+            <column>[federated.csold].[none:office_rank_units:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.csold].[Multiple Values]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>([federated.csold].[none:office_rank_units:nk] / [federated.csold].[none:office_display:nk])</rows>
+        <cols>[federated.csold].[:Measure Names]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Offices by Volume'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Top 100 Listing Offices by Sales Volume -- ranked statewide; filters show each office's activity within your selection</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.csold'>
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[office_display]' derivation='None' name='[none:office_display:nk]' pivot='key' type='nominal' />
+            <column-instance column='[sentinel_flag]' derivation='None' name='[none:sentinel_flag:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[office_rank_volume]' derivation='None' name='[none:office_rank_volume:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[office_rank_volume]' derivation='None' name='[none:office_rank_volume:nk]' pivot='key' type='nominal' />
+            <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[ClosePrice]' derivation='Sum' name='[sum:ClosePrice:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_share]' derivation='User' name='[usr:Calculation_share:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.csold].[:Measure Names]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[sum:unit:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[sum:ClosePrice:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.csold].[usr:Calculation_share:qk]&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.csold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:sentinel_flag:ok]'><groupfilter function='member' level='[none:sentinel_flag:ok]' member='0' /></filter>
+          <filter class='quantitative' column='[federated.csold].[none:office_rank_volume:qk]' included-values='in-range'><min>1</min><max>100</max></filter>
+          <slices>
+            <column>[federated.csold].[none:CountyOrParish:nk]</column>
+            <column>[federated.csold].[none:City:nk]</column>
+            <column>[federated.csold].[none:PostalCode:nk]</column>
+            <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[:Measure Names]</column>
+            <column>[federated.csold].[none:sentinel_flag:ok]</column>
+            <column>[federated.csold].[none:office_rank_volume:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='9' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.csold].[Multiple Values]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>([federated.csold].[none:office_rank_volume:nk] / [federated.csold].[none:office_display:nk])</rows>
+        <cols>[federated.csold].[:Measure Names]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Median Price by Zip'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Median close price by zip code and month -- 60 busiest zips (darker = higher)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.csold'>
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[zip_rank]' derivation='None' name='[none:zip_rank:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[ClosePrice]' derivation='Median' name='[med:ClosePrice:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.csold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:YrMo:nk]' filter-group='5'><groupfilter function='level-members' level='[none:YrMo:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='quantitative' column='[federated.csold].[none:zip_rank:qk]' included-values='in-range'><min>1</min><max>60</max></filter>
+          <slices>
+            <column>[federated.csold].[none:CountyOrParish:nk]</column>
+            <column>[federated.csold].[none:City:nk]</column>
+            <column>[federated.csold].[none:PostalCode:nk]</column>
+            <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[none:YrMo:nk]</column>
+            <column>[federated.csold].[none:zip_rank:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='8' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='8' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Square' />
+            <encodings>
+              <color column='[federated.csold].[med:ClosePrice:qk]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>[federated.csold].[none:PostalCode:nk]</rows>
+        <cols>[federated.csold].[tmn:CloseDate:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Homes Sold by Zip'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Homes sold by zip code and month -- 60 busiest zips (darker = more)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.csold'>
+            <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
+            <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
+            <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[CloseDate]' derivation='Month-Trunc' name='[tmn:CloseDate:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[zip_rank]' derivation='None' name='[none:zip_rank:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.csold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:YrMo:nk]' filter-group='5'><groupfilter function='level-members' level='[none:YrMo:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='quantitative' column='[federated.csold].[none:zip_rank:qk]' included-values='in-range'><min>1</min><max>60</max></filter>
+          <slices>
+            <column>[federated.csold].[none:CountyOrParish:nk]</column>
+            <column>[federated.csold].[none:City:nk]</column>
+            <column>[federated.csold].[none:PostalCode:nk]</column>
+            <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[none:YrMo:nk]</column>
+            <column>[federated.csold].[none:zip_rank:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='font-size' value='8' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='font-size' value='8' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Square' />
+            <encodings>
+              <color column='[federated.csold].[sum:unit:qk]' />
+            </encodings>
+          </pane>
+        </panes>
+        <rows>[federated.csold].[none:PostalCode:nk]</rows>
+        <cols>[federated.csold].[tmn:CloseDate:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Brokerage Share'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Share of California listing sides by brokerage, monthly (sentinels excluded; Others omitted)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[month]' derivation='Month-Trunc' name='[tmn:month:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[share_pct]' derivation='Sum' name='[sum:share_pct:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Compass&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Coldwell Banker&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Keller Williams&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;RE/MAX&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;eXp Realty&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Real Broker&quot;' />
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Equity Union&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Line' />
+            <encodings>
+              <color column='[federated.brokerages].[none:brokerage:nk]' />
+              <text column='[federated.brokerages].[none:brokerage:nk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-mode' value='range' />
+                <format attr='mark-labels-line-first' value='false' />
+                <format attr='mark-labels-line-last' value='true' />
+                <format attr='mark-labels-range-min' value='false' />
+                <format attr='mark-labels-range-max' value='false' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.brokerages].[sum:share_pct:qk]</rows>
+        <cols>[federated.brokerages].[tmn:month:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Opendoor Listing Sides'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Opendoor listing sides per month -- the iBuyer's exit (2026 = first half only)</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[month]' derivation='Month-Trunc' name='[tmn:month:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[sides]' derivation='Sum' name='[sum:sides:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Opendoor&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style />
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <text column='[federated.brokerages].[sum:sides:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.brokerages].[sum:sides:qk]</rows>
+        <cols>[federated.brokerages].[tmn:month:qk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='KPI Compass Share'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Compass share of listing sides, 2026 H1</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[share_pct]' derivation='Avg' name='[avg:share_pct:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Compass&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.brokerages].[none:YrMo:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-01&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-02&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-03&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-04&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-05&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-06&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+            <column>[federated.brokerages].[none:YrMo:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.brokerages].[avg:share_pct:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Compass Volume'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Compass sales volume, 2024</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[volume]' derivation='Sum' name='[sum:volume:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Compass&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.brokerages].[none:YrMo:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-01&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-02&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-03&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-04&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-05&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-06&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-07&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-08&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-09&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-10&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-11&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2024-12&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+            <column>[federated.brokerages].[none:YrMo:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.brokerages].[sum:volume:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Real Broker Share'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Real Broker share of listing sides, 2026 H1</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[share_pct]' derivation='Avg' name='[avg:share_pct:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Real Broker&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.brokerages].[none:YrMo:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-01&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-02&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-03&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-04&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-05&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-06&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+            <column>[federated.brokerages].[none:YrMo:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.brokerages].[avg:share_pct:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+    <worksheet name='KPI Opendoor Sides'>
+      <layout-options>
+        <title>
+          <formatted-text><run>Opendoor listing sides, 2026 H1</run></formatted-text>
+        </title>
+      </layout-options>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Brokerage Monthly Share (precomputed)' name='federated.brokerages' />
+          </datasources>
+
+          <datasource-dependencies datasource='federated.brokerages'>
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
+            <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
+            <column-instance column='[sides]' derivation='Sum' name='[sum:sides:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.brokerages].[none:brokerage:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:brokerage:nk]' member='&quot;Opendoor&quot;' />
+            </groupfilter>
+          </filter>
+          <filter class='categorical' column='[federated.brokerages].[none:YrMo:nk]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-01&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-02&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-03&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-04&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-05&quot;' />
+              <groupfilter function='member' level='[none:YrMo:nk]' member='&quot;2026-06&quot;' />
+            </groupfilter>
+          </filter>
+          <slices>
+            <column>[federated.brokerages].[none:brokerage:nk]</column>
+            <column>[federated.brokerages].[none:YrMo:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='text-align' value='center' />
+            <format attr='font-weight' value='bold' />
+            <format attr='font-size' value='24' />
+          </style-rule>
+          <style-rule element='table-div'>
+            <format attr='line-visibility' scope='cols' value='off' />
+            <format attr='line-visibility' scope='rows' value='off' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.brokerages].[sum:sides:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows />
+        <cols />
+      </table>
+    </worksheet>
+  </worksheets>
+  <dashboards>
+    <dashboard name='Top Agents (Units)'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) excluded from rankings and share denominators. Units = closed sales; volume = sum of close price.</run></formatted-text>
+          </zone>
+          <zone h='96250' id='3' name='Agents by Units' w='100000' x='0' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Top Agents (Volume)'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) excluded from rankings and share denominators. Units = closed sales; volume = sum of close price.</run></formatted-text>
+          </zone>
+          <zone h='96250' id='3' name='Agents by Volume' w='100000' x='0' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Top Offices (Units)'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) excluded from rankings and share denominators. Units = closed sales; volume = sum of close price. Filters apply to every view on this tab.</run></formatted-text>
+          </zone>
+          <zone h='6875' id='3' mode='checkdropdown' name='Offices by Units' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6875' id='4' mode='checkdropdown' name='Offices by Units' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='6875' />
+          <zone h='6875' id='5' mode='checkdropdown' name='Offices by Units' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='13750' />
+          <zone h='6875' id='6' mode='checkdropdown' name='Offices by Units' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='20625' />
+          <zone h='96250' id='7' name='Offices by Units' w='78000' x='22000' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Top Offices (Volume)'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) excluded from rankings and share denominators. Units = closed sales; volume = sum of close price. Filters apply to every view on this tab.</run></formatted-text>
+          </zone>
+          <zone h='6875' id='3' mode='checkdropdown' name='Offices by Volume' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6875' id='4' mode='checkdropdown' name='Offices by Volume' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='6875' />
+          <zone h='6875' id='5' mode='checkdropdown' name='Offices by Volume' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='13750' />
+          <zone h='6875' id='6' mode='checkdropdown' name='Offices by Volume' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='20625' />
+          <zone h='96250' id='7' name='Offices by Volume' w='78000' x='22000' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Median Price by Zip'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026. Heat map = one colored cell per zip code and month; the 60 zips with the most closed sales are shown, ranked. Filters (month, county, city, zip, property type) apply to the grid.</run></formatted-text>
+          </zone>
+          <zone h='6250' id='3' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
+          <zone h='6250' id='6' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
+          <zone h='6250' id='7' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
+          <zone h='96250' id='8' name='Median Price by Zip' w='78000' x='22000' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Homes Sold by Zip'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026. Heat map = one colored cell per zip code and month; the 60 zips with the most closed sales are shown, ranked. Filters (month, county, city, zip, property type) apply to the grid.</run></formatted-text>
+          </zone>
+          <zone h='6250' id='3' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
+          <zone h='6250' id='6' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
+          <zone h='6250' id='7' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
+          <zone h='96250' id='8' name='Homes Sold by Zip' w='78000' x='22000' y='0' />
+        </zone>
+      </zones>
+    </dashboard>
+    <dashboard name='Brokerage Power'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <zones>
+        <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
+          <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
+            <formatted-text><run fontsize='8'>Brokerage brands resolved from normalized office names (Compass / Keller Williams / Coldwell Banker / RE/MAX / eXp / Berkshire / Century 21 / Sotheby's / Redfin / Real Broker / Equity Union / Opendoor / Others). Share = brand listing sides / all listing sides that month. 2026 is January-June only.</run></formatted-text>
+          </zone>
+          <zone h='18750' id='3' name='KPI Compass Share' w='25000' x='0' y='0' />
+          <zone h='18750' id='4' name='KPI Compass Volume' w='25000' x='25000' y='0' />
+          <zone h='18750' id='5' name='KPI Real Broker Share' w='25000' x='50000' y='0' />
+          <zone h='18750' id='6' name='KPI Opendoor Sides' w='25000' x='75000' y='0' />
+          <zone h='77500' id='7' name='Brokerage Share' w='62000' x='0' y='18750' />
+          <zone h='77500' id='8' name='Opendoor Listing Sides' w='38000' x='62000' y='18750' />
+        </zone>
+      </zones>
+    </dashboard>
+  </dashboards>
+  <windows>
+    <window class='dashboard' maximized='true' name='Top Agents (Units)'>
+      <viewpoints>
+        <viewpoint name='Agents by Units'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Top Agents (Volume)'>
+      <viewpoints>
+        <viewpoint name='Agents by Volume'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Top Offices (Units)'>
+      <viewpoints>
+        <viewpoint name='Offices by Units'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Top Offices (Volume)'>
+      <viewpoints>
+        <viewpoint name='Offices by Volume'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Median Price by Zip'>
+      <viewpoints>
+        <viewpoint name='Median Price by Zip'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Homes Sold by Zip'>
+      <viewpoints>
+        <viewpoint name='Homes Sold by Zip'>
+          <zoom type='fit-width' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='dashboard' name='Brokerage Power'>
+      <viewpoints>
+        <viewpoint name='KPI Compass Share'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Compass Volume'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Real Broker Share'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='KPI Opendoor Sides'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Brokerage Share'>
+          <zoom type='entire-view' />
+        </viewpoint>
+        <viewpoint name='Opendoor Listing Sides'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='-1' />
+    </window>
+    <window class='worksheet' hidden='true' name='Agents by Units'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Agents by Volume'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Offices by Units'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Offices by Volume'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Median Price by Zip'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Homes Sold by Zip'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Brokerage Share'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='Opendoor Listing Sides'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Compass Share'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Compass Volume'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Real Broker Share'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+    <window class='worksheet' hidden='true' name='KPI Opendoor Sides'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint />
+    </window>
+  </windows>
+</workbook>
