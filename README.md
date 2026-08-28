@@ -9,6 +9,8 @@ A 12-week data analyst internship at IDX Exchange, a real estate technology comp
 
 > No proprietary MLS data, API credentials, or client records are stored in this repository. Raw CSVs are produced and kept **local only**.
 
+**Live dashboards:** [CA Market Analysis on Tableau Public](https://public.tableau.com/app/profile/emory.williams/viz/CAMarketAnalysis_17878744698360/MarketPulse)
+
 ## Objectives
 
 - Pull **listings** and **sold** MLS records from the CoreLogic Trestle API.
@@ -41,6 +43,7 @@ week8-10/
   make_extracts.py         # Week 7 flagged CSVs → Tableau .hyper extracts
   make_market_workbook.py  # generates market_analysis.twb (worksheets, dashboards, filters)
   market_analysis.twb      # the generated workbook STRUCTURE (XML — contains no data rows)
+  img/                     # rendered previews of the six published dashboard tabs
 ```
 
 Data CSVs, Excel files, Tableau `.twbx` workbooks, and `.hyper` extracts are gitignored — this repo holds code and documentation only. The committed `.twb` is pure XML structure (chart definitions, no data rows); per the program's direction, the data-bearing workbook is published to Tableau Public rather than committed.
@@ -360,12 +363,27 @@ Two scripts in `week8-10/`:
 
 **A data-quality catch the dashboards themselves surfaced:** the first live render of the ratio view showed monthly averages spiking to 170 — impossible for a close-to-list ratio. The cause: the Week 7 IQR flag fences price, living area, and days-on-market, but **not the ratio itself**, so 552 surviving rows (0.14% of the IQR-kept base) with data-entry ratios above 2× (worst case 1,077,419× — a $1 original list price) poisoned the average. The fix is a disclosed (0, 2] range filter on the ratio worksheet only: median ratio is exactly 1.0000, and the monthly average now lands where the market actually is, 0.98–1.02. This is exactly why the averages-need-guarding rule exists — and why medians never needed one.
 
-**Week 9 rebuild (Aug 27) — to the program's dashboard standard.** The director's guidance (desktop Fixed 1000×800, KPIs top-left, 3–5 charts per dashboard, one dropdown driving every chart, direct rounded labels, worksheets hidden on publish) and his reference workbook organize dashboards by *geography*, not by metric. The generator was rebuilt accordingly: six tabs — Market Pulse, County, City, Zip, New Listings, Rates and the Market — each with KPI tiles, linked filters (Tableau's `filter-group` mechanism, discovered in its bundled Superstore workbook), and precomputed rank columns in the extracts so "top-15 counties" and "top-8 property types" sort by value with plain range filters. All five required monthly views live on the geography tabs. Two of the six (all six in [week8-10/README.md](week8-10/README.md)):
+
+
+
+**Deliberately not done yet:** nothing is published to Tableau Public — the `.twbx` lives locally until the data-policy confirmation arrives. The competitive workbook is Weeks 9–10.
+
+### Week 9 — Tableau dashboards, part 2: rebuilt to the program's standard, and published
+
+**A note on cadence.** Classes started this week, and I worked 30 hours in the final week of my other internship on top of a 15-credit-hour course load, so this repo fell about a week behind the team's Tableau pace. As of August 27 it is current again: the market workbook is rebuilt to the director's published standard, live on Tableau Public, and the code and this README are in sync with it. The catch-up used the same routine I'll run every week from here (see "How to update" below).
+
+**What changed and why.** The director's guidance (desktop Fixed 1000×800, KPIs top-left, 3–5 charts per dashboard, one dropdown driving every chart, direct rounded labels, worksheets hidden on publish) and his reference workbook organize dashboards by *geography*, not by metric. The generator was rebuilt accordingly: six tabs — Market Pulse, County, City, Zip, New Listings, Rates and the Market — each with KPI tiles, linked filters (Tableau's `filter-group` mechanism, discovered in its bundled Superstore workbook), and precomputed rank columns in the extracts so "top-15 counties" and "top-8 property types" sort by value with plain range filters. All five required monthly views live on the geography tabs. Two of the six (all six in [week8-10/README.md](week8-10/README.md)):
 
 ![County tab — dropdowns, four KPI tiles, four directly-labeled charts](week8-10/img/tab2_county.png)
 
 ![Market Pulse — statewide KPIs, median price, closed sales, top-15 counties](week8-10/img/tab1_market_pulse.png)
 
-**Publishing:** per the program's August 24 directive, Tableau progress is shown by publishing to Tableau Public rather than committing workbook files — the repo keeps the *generator code* and the data-free `.twb` structure, and the published workbook lives on the Tableau Public profile (worksheets hidden, dashboards only, per the program's publishing guidance).
+**Where it lives now.** Per the program's August 24 direction, Tableau progress is shown on **Tableau Public**, not in committed workbook files: **[CA Market Analysis](https://public.tableau.com/app/profile/emory.williams/viz/CAMarketAnalysis_17878744698360/MarketPulse)** — six dashboard tabs, worksheets hidden. The repo keeps the generator code, the data-free `.twb` structure, and rendered previews.
 
-**Deliberately not done yet:** nothing is published to Tableau Public — the `.twbx` lives locally until the data-policy confirmation arrives. The competitive workbook is Weeks 9–10.
+**Sanity check against the team.** Reviewed against the director's reference workbook (*CA Market Analysis – Premium Edition*) and teammates' published workbooks: geography-organized tabs, KPI tiles top-left, direct rounded labels, one dropdown driving every chart, and desktop 1000×800 sizing all match the standard. The one feature a teammate has that this workbook doesn't yet is a **year-over-year overlay** (2024 / 2025 / 2026 on a single January–December axis) — queued for the next iteration alongside the Weeks 9–10 competitive workbook.
+
+**How to update this workbook from here (the weekly routine).**
+1. New month of data → run the Weeks 1–7 stages → `python3 week8-10/make_extracts.py` (rebuilds the two `.hyper` extracts, including the rank columns).
+2. `python3 week8-10/make_market_workbook.py` regenerates `market_analysis.twb` (worksheets hidden; add `--show-sheets` to inspect worksheets).
+3. Open it in Tableau Public Desktop, check each tab against the numbers in the script RUN LOGs, then **File → Save to Tableau Public As…** under the same name to replace the published version.
+4. Commit the generator + `.twb` + refreshed previews; the README's Week section gets the change note.
