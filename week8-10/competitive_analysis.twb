@@ -337,7 +337,7 @@
         <cols>[federated.csold].[:Measure Names]</cols>
       </table>
     </worksheet>
-    <worksheet name='Median Price by Zip'>
+    <worksheet name='Zip Heat - Median Price'>
       <layout-options>
         <title>
           <formatted-text><run>Median close price by zip code and month -- 60 busiest zips (darker = higher)</run></formatted-text>
@@ -398,7 +398,7 @@
         <cols>[federated.csold].[tmn:CloseDate:qk]</cols>
       </table>
     </worksheet>
-    <worksheet name='Homes Sold by Zip'>
+    <worksheet name='Zip Heat - Homes Sold'>
       <layout-options>
         <title>
           <formatted-text><run>Homes sold by zip code and month -- 60 busiest zips (darker = more)</run></formatted-text>
@@ -917,12 +917,12 @@
           <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
             <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026. Heat map = one colored cell per zip code and month; the 60 zips with the most closed sales are shown, ranked. Filters (month, county, city, zip, property type) apply to the grid.</run></formatted-text>
           </zone>
-          <zone h='6250' id='3' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
-          <zone h='6250' id='4' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
-          <zone h='6250' id='5' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
-          <zone h='6250' id='6' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
-          <zone h='6250' id='7' mode='checkdropdown' name='Median Price by Zip' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
-          <zone h='96250' id='8' name='Median Price by Zip' w='78000' x='22000' y='0' />
+          <zone h='6250' id='3' mode='checkdropdown' name='Zip Heat - Median Price' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Zip Heat - Median Price' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Zip Heat - Median Price' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
+          <zone h='6250' id='6' mode='checkdropdown' name='Zip Heat - Median Price' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
+          <zone h='6250' id='7' mode='checkdropdown' name='Zip Heat - Median Price' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
+          <zone h='96250' id='8' name='Zip Heat - Median Price' w='78000' x='22000' y='0' />
         </zone>
       </zones>
     </dashboard>
@@ -934,12 +934,12 @@
           <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
             <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026. Heat map = one colored cell per zip code and month; the 60 zips with the most closed sales are shown, ranked. Filters (month, county, city, zip, property type) apply to the grid.</run></formatted-text>
           </zone>
-          <zone h='6250' id='3' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
-          <zone h='6250' id='4' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
-          <zone h='6250' id='5' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
-          <zone h='6250' id='6' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
-          <zone h='6250' id='7' mode='checkdropdown' name='Homes Sold by Zip' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
-          <zone h='96250' id='8' name='Homes Sold by Zip' w='78000' x='22000' y='0' />
+          <zone h='6250' id='3' mode='checkdropdown' name='Zip Heat - Homes Sold' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='0' y='0' />
+          <zone h='6250' id='4' mode='checkdropdown' name='Zip Heat - Homes Sold' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='0' y='6250' />
+          <zone h='6250' id='5' mode='checkdropdown' name='Zip Heat - Homes Sold' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='0' y='12500' />
+          <zone h='6250' id='6' mode='checkdropdown' name='Zip Heat - Homes Sold' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='0' y='18750' />
+          <zone h='6250' id='7' mode='checkdropdown' name='Zip Heat - Homes Sold' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='0' y='25000' />
+          <zone h='96250' id='8' name='Zip Heat - Homes Sold' w='78000' x='22000' y='0' />
         </zone>
       </zones>
     </dashboard>
@@ -996,7 +996,7 @@
     </window>
     <window class='dashboard' name='Median Price by Zip'>
       <viewpoints>
-        <viewpoint name='Median Price by Zip'>
+        <viewpoint name='Zip Heat - Median Price'>
           <zoom type='fit-width' />
         </viewpoint>
       </viewpoints>
@@ -1004,7 +1004,7 @@
     </window>
     <window class='dashboard' name='Homes Sold by Zip'>
       <viewpoints>
-        <viewpoint name='Homes Sold by Zip'>
+        <viewpoint name='Zip Heat - Homes Sold'>
           <zoom type='fit-width' />
         </viewpoint>
       </viewpoints>
@@ -1081,7 +1081,7 @@
       </cards>
       <viewpoint />
     </window>
-    <window class='worksheet' hidden='true' name='Median Price by Zip'>
+    <window class='worksheet' hidden='true' name='Zip Heat - Median Price'>
       <cards>
         <edge name='left'>
           <strip size='160'>
@@ -1093,7 +1093,7 @@
       </cards>
       <viewpoint />
     </window>
-    <window class='worksheet' hidden='true' name='Homes Sold by Zip'>
+    <window class='worksheet' hidden='true' name='Zip Heat - Homes Sold'>
       <cards>
         <edge name='left'>
           <strip size='160'>

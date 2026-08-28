@@ -435,7 +435,7 @@ def window(kind, name, hidden=False, sheets=(), first=False):
       <viewpoint />
     </window>"""
     SCROLL = {"Agents by Units", "Agents by Volume", "Offices by Units", "Offices by Volume",
-              "Median Price by Zip", "Homes Sold by Zip"}
+              "Zip Heat - Median Price", "Zip Heat - Homes Sold"}
     vps = "\n".join(f"        <viewpoint name='{s}'>\n          <zoom type='{'fit-width' if s in SCROLL else 'entire-view'}' />\n        </viewpoint>"
                     for s in dict.fromkeys(sheets))
     return f"""    <window class='dashboard'{" maximized='true'" if first else ""} name='{name}'>
@@ -456,9 +456,9 @@ def main():
         agents_table("Agents by Volume", "volume"),
         offices_table("Offices by Units", "units"),
         offices_table("Offices by Volume", "volume"),
-        zip_heat("Median Price by Zip", "Median close price by zip code and month -- 60 busiest zips (darker = higher)",
+        zip_heat("Zip Heat - Median Price", "Median close price by zip code and month -- 60 busiest zips (darker = higher)",
                  "[med:ClosePrice:qk]", "ClosePrice", "Median"),
-        zip_heat("Homes Sold by Zip", "Homes sold by zip code and month -- 60 busiest zips (darker = more)",
+        zip_heat("Zip Heat - Homes Sold", "Homes sold by zip code and month -- 60 busiest zips (darker = more)",
                  "[sum:unit:qk]", "unit", "Sum"),
         share_lines(),
         opendoor_bars(),
@@ -496,8 +496,8 @@ def main():
             d.card(SOLD, dim, s, 0, i * 50, 220, 50)
         d.sheet(s, 220, 0, 780, 770)
         return d
-    d5 = map_tab("Median Price by Zip", "Median Price by Zip")
-    d6 = map_tab("Homes Sold by Zip", "Homes Sold by Zip")
+    d5 = map_tab("Median Price by Zip", "Zip Heat - Median Price")
+    d6 = map_tab("Homes Sold by Zip", "Zip Heat - Homes Sold")
 
     d7 = Dash("Brokerage Power", note_brok)
     for i, k in enumerate(["KPI Compass Share", "KPI Compass Volume", "KPI Real Broker Share", "KPI Opendoor Sides"]):
