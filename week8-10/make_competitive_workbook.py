@@ -33,13 +33,14 @@ FMT_MONEY_B = "c&quot;$&quot;#,##0,,,.0B;(&quot;$&quot;#,##0,,,.0B)"
 FMT_INT = "n#,##0;-#,##0"
 FMT_PCT2 = "n#,##0.00&quot;%&quot;;-#,##0.00&quot;%&quot;"
 FMT_PCT1 = "n#,##0.0&quot;%&quot;;-#,##0.0&quot;%&quot;"
+FMT_MONEY_FULL = "c&quot;$&quot;#,##0;(&quot;$&quot;#,##0)"
 
 SHARE_FORMULA = "SUM([unit]) / SUM({ EXCLUDE [office_display] : SUM([unit]) }) * 100"
 
 SOLD_COLS = f"""
       <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
       <column caption='Month' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
-      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_M}' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_FULL}' name='[ClosePrice]' role='measure' type='quantitative' />
       <column datatype='string' name='[City]' role='dimension' type='nominal' />
       <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
       <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' semantic-role='[ZipCode].[Name]' type='nominal' />
@@ -52,6 +53,12 @@ SOLD_COLS = f"""
       <column datatype='integer' name='[zip_rank]' role='dimension' type='ordinal' />
       <column caption='Rank' datatype='integer' name='[office_rank_units]' role='dimension' type='ordinal' />
       <column caption='Rank' datatype='integer' name='[office_rank_volume]' role='dimension' type='ordinal' />
+      <column caption='Page (by units)' datatype='string' name='[office_band_units]' role='dimension' type='nominal' />
+      <column caption='Page (by volume)' datatype='string' name='[office_band_volume]' role='dimension' type='nominal' />
+      <column caption='Latitude' datatype='real' name='[Latitude]' role='measure' type='quantitative' />
+      <column caption='Longitude' datatype='real' name='[Longitude]' role='measure' type='quantitative' />
+      <column caption='South to north' datatype='real' name='[lat_ca]' role='measure' type='quantitative' />
+      <column caption='West to east' datatype='real' name='[lon_ca]' role='measure' type='quantitative' />
       <column caption='Market Share %' datatype='real' default-format='{FMT_PCT2}' name='[Calculation_share]' role='measure' type='quantitative'>
         <calculation class='tableau' formula='{SHARE_FORMULA}' />
       </column>"""
@@ -59,11 +66,13 @@ SOLD_COLS = f"""
 AG_COLS = f"""
       <column caption='Listing Agent, Office' datatype='string' name='[display]' role='dimension' type='nominal' />
       <column caption='Units Sold' datatype='integer' default-format='{FMT_INT}' name='[units]' role='measure' type='quantitative' />
-      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_M}' name='[volume]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_FULL}' name='[volume]' role='measure' type='quantitative' />
       <column caption='Market Share % (units)' datatype='real' default-format='{FMT_PCT2}' name='[share_units_pct]' role='measure' type='quantitative' />
       <column caption='Market Share % (volume)' datatype='real' default-format='{FMT_PCT2}' name='[share_volume_pct]' role='measure' type='quantitative' />
       <column caption='Rank' datatype='integer' name='[rank_units]' role='dimension' type='ordinal' />
-      <column caption='Rank' datatype='integer' name='[rank_volume]' role='dimension' type='ordinal' />"""
+      <column caption='Rank' datatype='integer' name='[rank_volume]' role='dimension' type='ordinal' />
+      <column caption='Page (by units)' datatype='string' name='[band_units]' role='dimension' type='nominal' />
+      <column caption='Page (by volume)' datatype='string' name='[band_volume]' role='dimension' type='nominal' />"""
 
 BM_COLS = f"""
       <column caption='Brokerage' datatype='string' name='[brokerage]' role='dimension' type='nominal' />
@@ -131,6 +140,14 @@ def range_filter(ds, col, lo, hi):
             f"included-values='in-range'><min>{lo}</min><max>{hi}</max></filter>")
 
 
+def page_filter(ds, col, group):
+    """Rank-band page filter, default page 01-25, linked to a dropdown card."""
+    return (f"          <filter class='categorical' column='[{ds}].[none:{col}:nk]' filter-group='{group}'>"
+            f"<groupfilter function='union' user:op='manual' user:ui-enumeration='inclusive' user:ui-marker='enumerate'>"
+            f"<groupfilter function='member' level='[none:{col}:nk]' member='&quot;01-25&quot;' />"
+            f"</groupfilter></filter>")
+
+
 def measure_names_filter(ds, insts):
     members = "\n".join(f"              <groupfilter function='member' level='[:Measure Names]' "
                         f"member='&quot;[{ds}].{i}&quot;' />" for i in insts)
@@ -195,67 +212,97 @@ def text_pane(ds, labels=False):
           </pane>"""
 
 
-# ---------------------------------------------------------------- agents tables
-def agents_table(name, by):
-    rank, share = (f"rank_{by}", f"share_{by}_pct")
-    measures = ["[sum:units:qk]", "[sum:volume:qk]", f"[sum:{share}:qk]"]
+# ------------------------------------------------------------ ranked bar charts
+BAR_LABELS = """            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+                <format attr='mark-labels-cull' value='true' />
+                <format attr='mark-labels-mode' value='all' />
+              </style-rule>
+            </style>"""
+
+
+def bar_pane(ds, measure_inst):
+    return f"""          <pane>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <text column='[{ds}].{measure_inst}' />
+            </encodings>
+{BAR_LABELS}
+          </pane>"""
+
+
+def agents_bars(name, by):
+    """Top 100 listing agents as a ranked horizontal bar chart (statewide, precomputed)."""
+    rank = f"rank_{by}"
+    measure_col = "units" if by == "units" else "volume"
+    measure_inst = f"[sum:{measure_col}:qk]"
+    band = f"band_{by}"
     deps = "\n".join("            " + x for x in [
         inst("display", "None", "nk"), inst(rank, "None", "nk"), inst(rank, "None", "qk"),
-        inst("units", "Sum"), inst("volume", "Sum"), inst(share, "Sum")])
-    filters = measure_names_filter(AG, measures) + "\n" + range_filter(AG, rank, 1, 100)
-    slices = f"            <column>[{AG}].[:Measure Names]</column>\n            <column>[{AG}].[none:{rank}:qk]</column>"
-    title = f"Top 100 Listing Agents by {'Units Sold' if by == 'units' else 'Sales Volume'} (statewide, Jan 2024 - Jun 2026)"
-    return sheet(name, AG, title, deps, filters, slices, text_pane(AG),
-                 f"([{AG}].[none:{rank}:nk] / [{AG}].[none:display:nk])", f"[{AG}].[:Measure Names]")
+        inst(band, "None", "nk"), inst(measure_col, "Sum")])
+    filters = range_filter(AG, rank, 1, 100) + "\n" + page_filter(AG, band, 11 if by == "units" else 12)
+    slices = f"            <column>[{AG}].[none:{rank}:qk]</column>\n            <column>[{AG}].[none:{band}:nk]</column>"
+    title = f"Top 100 Listing Agents by {'Units Sold' if by == 'units' else 'Sales Volume'} -- 25 per page; use the Page dropdown for ranks 26-100"
+    return sheet(name, AG, title, deps, filters, slices, bar_pane(AG, measure_inst),
+                 f"([{AG}].[none:{rank}:nk] / [{AG}].[none:display:nk])", f"[{AG}].{measure_inst}", style="        <style />")
 
 
-# --------------------------------------------------------------- offices tables
-def offices_table(name, by):
+def offices_bars(name, by):
+    """Top 100 listing offices as a ranked bar chart, filterable by the four dimensions."""
     rank_col = f"office_rank_{by}"
-    measures = ["[sum:unit:qk]", "[sum:ClosePrice:qk]", "[usr:Calculation_share:qk]"]
+    measure_col = "unit" if by == "units" else "ClosePrice"
+    measure_inst = f"[sum:{measure_col}:qk]"
     gdeps, gfilts, gslices = geo_filters(SOLD)
+    band_col = f"office_band_{by}"
     deps = gdeps + "\n" + "\n".join("            " + x for x in [
         inst("office_display", "None", "nk"), inst("sentinel_flag", "None", "ok"),
-        inst(rank_col, "None", "qk"), inst(rank_col, "None", "nk"), inst("unit", "Sum"),
-        inst("ClosePrice", "Sum"), inst("Calculation_share", "User")])
-    filters = (measure_names_filter(SOLD, measures) + "\n" + gfilts + "\n" + sentinel_filter(SOLD)
-               + "\n" + range_filter(SOLD, rank_col, 1, 100))
-    slices = (gslices + f"\n            <column>[{SOLD}].[:Measure Names]</column>"
-              f"\n            <column>[{SOLD}].[none:sentinel_flag:ok]</column>"
-              f"\n            <column>[{SOLD}].[none:{rank_col}:qk]</column>")
-    title = (f"Top 100 Listing Offices by {'Units Sold' if by == 'units' else 'Sales Volume'} -- "
-             f"ranked statewide; filters show each office's activity within your selection")
-    return sheet(name, SOLD, title, deps, filters, slices, text_pane(SOLD),
-                 f"([{SOLD}].[none:{rank_col}:nk] / [{SOLD}].[none:office_display:nk])", f"[{SOLD}].[:Measure Names]")
+        inst(rank_col, "None", "nk"), inst(rank_col, "None", "qk"), inst(band_col, "None", "nk"), inst(measure_col, "Sum")])
+    filters = (gfilts + "\n" + sentinel_filter(SOLD) + "\n" + range_filter(SOLD, rank_col, 1, 100)
+               + "\n" + page_filter(SOLD, band_col, 13 if by == "units" else 14))
+    slices = (gslices + f"\n            <column>[{SOLD}].[none:sentinel_flag:ok]</column>"
+              f"\n            <column>[{SOLD}].[none:{rank_col}:qk]</column>"
+              f"\n            <column>[{SOLD}].[none:{band_col}:nk]</column>")
+    title = f"Top 100 Listing Offices by {'Units Sold' if by == 'units' else 'Sales Volume'} -- 25 per page (Page dropdown); ranked statewide, filters show activity within your selection"
+    return sheet(name, SOLD, title, deps, filters, slices, bar_pane(SOLD, measure_inst),
+                 f"([{SOLD}].[none:{rank_col}:nk] / [{SOLD}].[none:office_display:nk])", f"[{SOLD}].{measure_inst}", style="        <style />")
 
 
 # ---------------------------------------------------------------------- maps
-def zip_heat(name, title, color_inst, color_col, deriv, top=60):
-    """Zip x month heat map (Tableau's 'Heat Map' mark: colored squares)."""
+def zip_map(name, title, color_inst, color_col, deriv):
+    """Zip-code map: one circle per zip at its mean coordinates, colored by the
+    measure and sized by homes sold. Built from the rows' own Latitude/Longitude."""
     gdeps, gfilts, gslices = geo_filters(SOLD, month=True)
     deps = gdeps + "\n" + "\n".join("            " + x for x in [
-        inst("CloseDate", "Month-Trunc"), inst("zip_rank", "None", "qk"), inst(color_col, deriv)])
-    filters = gfilts + "\n" + range_filter(SOLD, "zip_rank", 1, top)
-    slices = gslices + f"\n            <column>[{SOLD}].[none:zip_rank:qk]</column>"
+        inst("lat_ca", "None", "qk"), inst("lon_ca", "None", "qk"),
+        inst("lat_ca", "Avg"), inst("lon_ca", "Avg"), inst("unit", "Sum"), inst(color_col, deriv)])
+    gfilts = (gfilts + "\n" + range_filter(SOLD, "lat_ca", 0, 9.9)
+              + "\n" + range_filter(SOLD, "lon_ca", 0, 10.6))
+    gslices = (gslices + f"\n            <column>[{SOLD}].[none:lat_ca:qk]</column>"
+               f"\n            <column>[{SOLD}].[none:lon_ca:qk]</column>")
     panes = f"""          <pane>
             <view>
               <breakdown value='auto' />
             </view>
-            <mark class='Square' />
+            <mark class='Circle' />
             <encodings>
               <color column='[{SOLD}].{color_inst}' />
+              <size column='[{SOLD}].[sum:unit:qk]' />
+              <lod column='[{SOLD}].[none:PostalCode:nk]' />
             </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-transparency' value='200' />
+                <format attr='has-stroke' value='true' />
+                <format attr='stroke-color' value='#ffffff' />
+              </style-rule>
+            </style>
           </pane>"""
-    style = """        <style>
-          <style-rule element='cell'>
-            <format attr='font-size' value='8' />
-          </style-rule>
-          <style-rule element='header'>
-            <format attr='font-size' value='8' />
-          </style-rule>
-        </style>"""
-    return sheet(name, SOLD, title, deps, filters, slices, panes,
-                 f"[{SOLD}].[none:PostalCode:nk]", f"[{SOLD}].[tmn:CloseDate:qk]", style=style)
+    return sheet(name, SOLD, title, deps, gfilts, gslices, panes,
+                 f"[{SOLD}].[avg:lat_ca:qk]", f"[{SOLD}].[avg:lon_ca:qk]", style="        <style />")
 
 
 # ------------------------------------------------------------- brokerage power
@@ -434,9 +481,9 @@ def window(kind, name, hidden=False, sheets=(), first=False):
       </cards>
       <viewpoint />
     </window>"""
-    SCROLL = {"Agents by Units", "Agents by Volume", "Offices by Units", "Offices by Volume",
-              "Zip Heat - Median Price", "Zip Heat - Homes Sold"}
-    vps = "\n".join(f"        <viewpoint name='{s}'>\n          <zoom type='{'fit-width' if s in SCROLL else 'entire-view'}' />\n        </viewpoint>"
+    SCROLL = set()
+    vps = "\n".join((f"        <viewpoint name='{s}' />" if s in SCROLL else
+                     f"        <viewpoint name='{s}'>\n          <zoom type='entire-view' />\n        </viewpoint>")
                     for s in dict.fromkeys(sheets))
     return f"""    <window class='dashboard'{" maximized='true'" if first else ""} name='{name}'>
       <viewpoints>
@@ -452,14 +499,14 @@ def main():
     args = ap.parse_args()
 
     ws = [
-        agents_table("Agents by Units", "units"),
-        agents_table("Agents by Volume", "volume"),
-        offices_table("Offices by Units", "units"),
-        offices_table("Offices by Volume", "volume"),
-        zip_heat("Zip Heat - Median Price", "Median close price by zip code and month -- 60 busiest zips (darker = higher)",
-                 "[med:ClosePrice:qk]", "ClosePrice", "Median"),
-        zip_heat("Zip Heat - Homes Sold", "Homes sold by zip code and month -- 60 busiest zips (darker = more)",
-                 "[sum:unit:qk]", "unit", "Sum"),
+        agents_bars("Agents by Units", "units"),
+        agents_bars("Agents by Volume", "volume"),
+        offices_bars("Offices by Units", "units"),
+        offices_bars("Offices by Volume", "volume"),
+        zip_map("Zip Map - Median Price", "Median close price by zip code (color = median price, size = homes sold)",
+                "[med:ClosePrice:qk]", "ClosePrice", "Median"),
+        zip_map("Zip Map - Homes Sold", "Homes sold by zip code (color and size = homes sold)",
+                "[sum:unit:qk]", "unit", "Sum"),
         share_lines(),
         opendoor_bars(),
         kpi("KPI Compass Share", "Compass share of listing sides, 2026 H1", "[avg:share_pct:qk]", "share_pct", "Avg", ["Compass"], H1_2026),
@@ -472,32 +519,31 @@ def main():
     note_state = ("CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) "
                   "excluded from rankings and share denominators. Units = closed sales; volume = sum of close price.")
     note_geo = note_state + " Filters apply to every view on this tab."
-    note_map = ("CRMLS sold, Jan 2024 - Jun 2026. Heat map = one colored cell per zip code and month; the 60 zips with "
-                "the most closed sales are shown, ranked. Filters (month, county, city, zip, property type) apply to the grid.")
+    note_map = ("CRMLS sold, Jan 2024 - Jun 2026. One circle per zip code at the mean coordinates of its sales "
+                "(88% of rows carry coordinates); color = the measure, size = homes sold. Filters apply to the map.")
     note_brok = ("Brokerage brands resolved from normalized office names (Compass / Keller Williams / Coldwell Banker / "
                  "RE/MAX / eXp / Berkshire / Century 21 / Sotheby's / Redfin / Real Broker / Equity Union / Opendoor / "
                  "Others). Share = brand listing sides / all listing sides that month. 2026 is January-June only.")
 
-    d1 = Dash("Top Agents (Units)", note_state); d1.sheet("Agents by Units", 0, 0, 1000, 770)
-    d2 = Dash("Top Agents (Volume)", note_state); d2.sheet("Agents by Volume", 0, 0, 1000, 770)
+    d1 = Dash("Top 100 Agents", note_state)
+    d1.sheet("Agents by Volume", 0, 0, 780, 385)
+    d1.sheet("Agents by Units", 0, 385, 780, 385)
+    d1.card(AG, "band_volume", "Agents by Volume", 780, 0, 220, 60)
+    d1.card(AG, "band_units", "Agents by Units", 780, 385, 220, 60)
 
-    def offices_tab(name, s):
-        d = Dash(name, note_geo)
-        for i, dim in enumerate(GEO_DIMS):
-            d.card(SOLD, dim, s, 0, i * 55, 220, 55)
-        d.sheet(s, 220, 0, 780, 770)
-        return d
-    d3 = offices_tab("Top Offices (Units)", "Offices by Units")
-    d4 = offices_tab("Top Offices (Volume)", "Offices by Volume")
+    d2 = Dash("Top 100 Offices", note_geo)
+    d2.sheet("Offices by Volume", 0, 0, 780, 385)
+    d2.sheet("Offices by Units", 0, 385, 780, 385)
+    d2.card(SOLD, "office_band_volume", "Offices by Volume", 780, 0, 220, 60)
+    d2.card(SOLD, "office_band_units", "Offices by Units", 780, 60, 220, 60)
+    for i, dim in enumerate(["PostalCode", "PropertySubType", "CountyOrParish", "City"]):
+        d2.card(SOLD, dim, "Offices by Volume", 780, 130 + i * 60, 220, 60)
 
-    def map_tab(name, s):
-        d = Dash(name, note_map)
-        for i, dim in enumerate(["YrMo"] + GEO_DIMS):
-            d.card(SOLD, dim, s, 0, i * 50, 220, 50)
-        d.sheet(s, 220, 0, 780, 770)
-        return d
-    d5 = map_tab("Median Price by Zip", "Zip Heat - Median Price")
-    d6 = map_tab("Homes Sold by Zip", "Zip Heat - Homes Sold")
+    d3 = Dash("Zip Code Heatmaps", note_map)
+    d3.sheet("Zip Map - Median Price", 0, 0, 780, 385)
+    d3.sheet("Zip Map - Homes Sold", 0, 385, 780, 385)
+    for i, dim in enumerate(["YrMo", "PostalCode", "PropertySubType", "CountyOrParish", "City"]):
+        d3.card(SOLD, dim, "Zip Map - Median Price", 780, i * 55, 220, 55)
 
     d7 = Dash("Brokerage Power", note_brok)
     for i, k in enumerate(["KPI Compass Share", "KPI Compass Volume", "KPI Real Broker Share", "KPI Opendoor Sides"]):
@@ -505,7 +551,7 @@ def main():
     d7.sheet("Brokerage Share", 0, 150, 620, 620)
     d7.sheet("Opendoor Listing Sides", 620, 150, 380, 620)
 
-    dbs = [d1, d2, d3, d4, d5, d6, d7]
+    dbs = [d1, d2, d3, d7]
     windows = [window("dashboard", d.name, sheets=d.sheets, first=(i == 0)) for i, d in enumerate(dbs)]
     windows += [window("worksheet", n, hidden=not args.show_sheets) for n in names]
 

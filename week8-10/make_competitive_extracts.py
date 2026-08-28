@@ -85,7 +85,7 @@ def write_hyper(hyper, name, df, cols):
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     use = ["CloseDate", "YrMo", "ClosePrice", "City", "CountyOrParish", "PostalCode",
-           "PropertySubType", "ListAgentFullName", "ListOfficeName"]
+           "PropertySubType", "ListAgentFullName", "ListOfficeName", "Latitude", "Longitude"]
     df = pd.read_csv(SOLD_IN, usecols=use, low_memory=False)
     assert len(df) == EXPECTED_ROWS, f"sold rows {len(df):,}"
     df["CloseDate"] = pd.to_datetime(df["CloseDate"], errors="coerce").dt.date
@@ -109,12 +109,26 @@ def main():
     off["rank_volume"] = off.volume.rank(ascending=False, method="first").astype(int)
     df["office_rank_units"] = df.office_key.map(off.rank_units).fillna(99999).astype(int)
     df["office_rank_volume"] = df.office_key.map(off.rank_volume).fillna(99999).astype(int)
-    df["office_display"] = df["ListOfficeName"].fillna("").astype(str).str.strip()
+    # One display name per normalized office: its most frequent raw spelling.
+    raw = df["ListOfficeName"].fillna("").astype(str).str.strip()
+    canonical = (pd.DataFrame({"k": df["office_key"], "raw": raw}).groupby("k")["raw"]
+                 .agg(lambda x: x.value_counts().index[0]))
+    df["office_display"] = df["office_key"].map(canonical)
     df["unit"] = 1  # SUM(unit) = units sold; reads as "Units Sold" in Measure Names
     # Zip codes ranked by closed sales (1 = most) so the zip heat maps can show the
     # busiest zips with a plain range filter.
     zr = df.groupby("PostalCode").size().rank(ascending=False, method="first").astype(int)
     df["zip_rank"] = df.PostalCode.map(zr).fillna(99999).astype(int)
+    # Rank bands page the 100-row tables into 25-row views a fixed dashboard can show legibly.
+    band = lambda r: ("01-25" if r <= 25 else "26-50" if r <= 50 else "51-75" if r <= 75 else "76-100" if r <= 100 else "100+")
+    df["office_band_units"] = df.office_rank_units.map(band)
+    df["office_band_volume"] = df.office_rank_volume.map(band)
+    # Map coordinates offset to California's south-west corner (lat 32.3, lon -124.6) so a
+    # zero-based axis starts exactly where the state starts; out-of-state/null -> null.
+    in_ca = df.Latitude.between(32.3, 42.2) & df.Longitude.between(-124.6, -114.0)
+    df["lat_ca"] = (df.Latitude - 32.3).where(in_ca)
+    df["lon_ca"] = (df.Longitude + 124.6).where(in_ca)
+    print(f"rows with California coordinates: {int(in_ca.sum()):,} ({100*in_ca.mean():.1f}%)")
 
     # ---- top-100 agents table ----------------------------------------------
     ag = base.groupby(["agent_key"]).agg(units=("YrMo", "size"), volume=("ClosePrice", "sum"),
@@ -127,6 +141,8 @@ def main():
     ag["rank_volume"] = ag.volume.rank(ascending=False, method="first").astype(int)
     ag["display"] = ag.agent.astype(str).str.strip() + ", " + ag.office.astype(str).str.strip()
     top = ag[(ag.rank_units <= 100) | (ag.rank_volume <= 100)].copy()
+    top["band_units"] = top.rank_units.map(band)
+    top["band_volume"] = top.rank_volume.map(band)
     print(f"top-100 agents table: {len(top)} rows (union of both rankings); "
           f"#1 by units = {top.sort_values('rank_units').iloc[0].display} "
           f"({int(top.units.max())} units)")
@@ -145,11 +161,15 @@ def main():
             "PropertySubType": SqlType.text(), "office_display": SqlType.text(), "unit": SqlType.big_int(),
             "office_key": SqlType.text(), "brokerage": SqlType.text(),
             "sentinel_flag": SqlType.big_int(), "zip_rank": SqlType.big_int(), "office_rank_units": SqlType.big_int(),
+            "office_band_units": SqlType.text(), "office_band_volume": SqlType.text(),
+            "Latitude": SqlType.double(), "Longitude": SqlType.double(),
+            "lat_ca": SqlType.double(), "lon_ca": SqlType.double(),
             "office_rank_volume": SqlType.big_int()})
         n2 = write_hyper(hp, "top_agents.hyper", top, {
             "display": SqlType.text(), "units": SqlType.big_int(), "volume": SqlType.double(),
             "share_units_pct": SqlType.double(), "share_volume_pct": SqlType.double(),
-            "rank_units": SqlType.big_int(), "rank_volume": SqlType.big_int()})
+            "rank_units": SqlType.big_int(), "rank_volume": SqlType.big_int(),
+            "band_units": SqlType.text(), "band_volume": SqlType.text()})
         n3 = write_hyper(hp, "brokerage_monthly.hyper", bm, {
             "brokerage": SqlType.text(), "month": SqlType.date(), "YrMo": SqlType.text(),
             "sides": SqlType.big_int(), "volume": SqlType.double(), "share_pct": SqlType.double()})
