@@ -12,7 +12,10 @@
       </connection>
       <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
       <column caption='Month' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
-      <column caption='Sales Volume' datatype='real' default-format='c&quot;$&quot;#,##0;(&quot;$&quot;#,##0)' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Close Price' datatype='real' default-format='c&quot;$&quot;#,##0;(&quot;$&quot;#,##0)' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='c&quot;$&quot;#,##0;(&quot;$&quot;#,##0)' name='[Calculation_volume]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='[ClosePrice]' />
+      </column>
       <column datatype='string' name='[City]' role='dimension' type='nominal' />
       <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
       <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' semantic-role='[ZipCode].[Name]' type='nominal' />
@@ -274,7 +277,7 @@
             <column-instance column='[office_rank_volume]' derivation='None' name='[none:office_rank_volume:nk]' pivot='key' type='nominal' />
             <column-instance column='[office_rank_volume]' derivation='None' name='[none:office_rank_volume:qk]' pivot='key' type='quantitative' />
             <column-instance column='[office_band_volume]' derivation='None' name='[none:office_band_volume:nk]' pivot='key' type='nominal' />
-            <column-instance column='[ClosePrice]' derivation='Sum' name='[sum:ClosePrice:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_volume]' derivation='Sum' name='[sum:Calculation_volume:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.csold].[none:CountyOrParish:nk]' filter-group='1'><groupfilter function='level-members' level='[none:CountyOrParish:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
@@ -302,7 +305,7 @@
             </view>
             <mark class='Bar' />
             <encodings>
-              <text column='[federated.csold].[sum:ClosePrice:qk]' />
+              <text column='[federated.csold].[sum:Calculation_volume:qk]' />
             </encodings>
             <style>
               <style-rule element='mark'>
@@ -314,13 +317,13 @@
           </pane>
         </panes>
         <rows>([federated.csold].[none:office_rank_volume:nk] / [federated.csold].[none:office_display:nk])</rows>
-        <cols>[federated.csold].[sum:ClosePrice:qk]</cols>
+        <cols>[federated.csold].[sum:Calculation_volume:qk]</cols>
       </table>
     </worksheet>
     <worksheet name='Zip Map - Median Price'>
       <layout-options>
         <title>
-          <formatted-text><run>Median close price by zip code (color = median price, size = homes sold)</run></formatted-text>
+          <formatted-text><run>Median close price by zip code (color = median price, size = homes sold) -- pick a Brokerage to see where each brand sells</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -328,17 +331,17 @@
           <datasources>
             <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
           </datasources>
-
+          <mapsources>
+            <mapsource name='Tableau' />
+          </mapsources>
           <datasource-dependencies datasource='federated.csold'>
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
             <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
             <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
-            <column-instance column='[lat_ca]' derivation='None' name='[none:lat_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lon_ca]' derivation='None' name='[none:lon_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lat_ca]' derivation='Avg' name='[avg:lat_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lon_ca]' derivation='Avg' name='[avg:lon_ca:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[zip_rank]' derivation='None' name='[none:zip_rank:qk]' pivot='key' type='quantitative' />
             <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
             <column-instance column='[ClosePrice]' derivation='Median' name='[med:ClosePrice:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
@@ -346,21 +349,29 @@
           <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:brokerage:nk]' filter-group='6'><groupfilter function='level-members' level='[none:brokerage:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:YrMo:nk]' filter-group='5'><groupfilter function='level-members' level='[none:YrMo:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='quantitative' column='[federated.csold].[none:lat_ca:qk]' included-values='in-range'><min>0</min><max>9.9</max></filter>
-          <filter class='quantitative' column='[federated.csold].[none:lon_ca:qk]' included-values='in-range'><min>0</min><max>10.6</max></filter>
+          <filter class='quantitative' column='[federated.csold].[none:zip_rank:qk]' included-values='in-range'><min>1</min><max>1500</max></filter>
           <slices>
             <column>[federated.csold].[none:CountyOrParish:nk]</column>
             <column>[federated.csold].[none:City:nk]</column>
             <column>[federated.csold].[none:PostalCode:nk]</column>
             <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[none:brokerage:nk]</column>
             <column>[federated.csold].[none:YrMo:nk]</column>
-            <column>[federated.csold].[none:lat_ca:qk]</column>
-            <column>[federated.csold].[none:lon_ca:qk]</column>
+            <column>[federated.csold].[none:zip_rank:qk]</column>
           </slices>
           <aggregation value='true' />
         </view>
-        <style />
+        <style>
+          <style-rule element='mark'>
+            <encoding attr='color' field='[federated.csold].[med:ClosePrice:qk]' palette='green_10_0' type='interpolated' />
+          </style-rule>
+          <style-rule element='map'>
+            <format attr='washout' value='0.5' />
+            <format attr='map-style' value='light' />
+          </style-rule>
+        </style>
         <panes>
           <pane>
             <view>
@@ -374,21 +385,21 @@
             </encodings>
             <style>
               <style-rule element='mark'>
-                <format attr='mark-transparency' value='200' />
+                <format attr='mark-transparency' value='190' />
                 <format attr='has-stroke' value='true' />
                 <format attr='stroke-color' value='#ffffff' />
               </style-rule>
             </style>
           </pane>
         </panes>
-        <rows>[federated.csold].[avg:lat_ca:qk]</rows>
-        <cols>[federated.csold].[avg:lon_ca:qk]</cols>
+        <rows>[federated.csold].[Latitude (generated)]</rows>
+        <cols>[federated.csold].[Longitude (generated)]</cols>
       </table>
     </worksheet>
     <worksheet name='Zip Map - Homes Sold'>
       <layout-options>
         <title>
-          <formatted-text><run>Homes sold by zip code (color and size = homes sold)</run></formatted-text>
+          <formatted-text><run>Homes sold by zip code (color and size = homes sold) -- pick a Brokerage to see each brand's footprint</run></formatted-text>
         </title>
       </layout-options>
       <table>
@@ -396,17 +407,17 @@
           <datasources>
             <datasource caption='Competitive Sold (row-level)' name='federated.csold' />
           </datasources>
-
+          <mapsources>
+            <mapsource name='Tableau' />
+          </mapsources>
           <datasource-dependencies datasource='federated.csold'>
             <column-instance column='[CountyOrParish]' derivation='None' name='[none:CountyOrParish:nk]' pivot='key' type='nominal' />
             <column-instance column='[City]' derivation='None' name='[none:City:nk]' pivot='key' type='nominal' />
             <column-instance column='[PostalCode]' derivation='None' name='[none:PostalCode:nk]' pivot='key' type='nominal' />
             <column-instance column='[PropertySubType]' derivation='None' name='[none:PropertySubType:nk]' pivot='key' type='nominal' />
+            <column-instance column='[brokerage]' derivation='None' name='[none:brokerage:nk]' pivot='key' type='nominal' />
             <column-instance column='[YrMo]' derivation='None' name='[none:YrMo:nk]' pivot='key' type='nominal' />
-            <column-instance column='[lat_ca]' derivation='None' name='[none:lat_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lon_ca]' derivation='None' name='[none:lon_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lat_ca]' derivation='Avg' name='[avg:lat_ca:qk]' pivot='key' type='quantitative' />
-            <column-instance column='[lon_ca]' derivation='Avg' name='[avg:lon_ca:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[zip_rank]' derivation='None' name='[none:zip_rank:qk]' pivot='key' type='quantitative' />
             <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
             <column-instance column='[unit]' derivation='Sum' name='[sum:unit:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
@@ -414,21 +425,29 @@
           <filter class='categorical' column='[federated.csold].[none:City:nk]' filter-group='2'><groupfilter function='level-members' level='[none:City:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:PostalCode:nk]' filter-group='3'><groupfilter function='level-members' level='[none:PostalCode:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:PropertySubType:nk]' filter-group='4'><groupfilter function='level-members' level='[none:PropertySubType:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
+          <filter class='categorical' column='[federated.csold].[none:brokerage:nk]' filter-group='6'><groupfilter function='level-members' level='[none:brokerage:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
           <filter class='categorical' column='[federated.csold].[none:YrMo:nk]' filter-group='5'><groupfilter function='level-members' level='[none:YrMo:nk]' user:ui-enumeration='all' user:ui-marker='enumerate' /></filter>
-          <filter class='quantitative' column='[federated.csold].[none:lat_ca:qk]' included-values='in-range'><min>0</min><max>9.9</max></filter>
-          <filter class='quantitative' column='[federated.csold].[none:lon_ca:qk]' included-values='in-range'><min>0</min><max>10.6</max></filter>
+          <filter class='quantitative' column='[federated.csold].[none:zip_rank:qk]' included-values='in-range'><min>1</min><max>1500</max></filter>
           <slices>
             <column>[federated.csold].[none:CountyOrParish:nk]</column>
             <column>[federated.csold].[none:City:nk]</column>
             <column>[federated.csold].[none:PostalCode:nk]</column>
             <column>[federated.csold].[none:PropertySubType:nk]</column>
+            <column>[federated.csold].[none:brokerage:nk]</column>
             <column>[federated.csold].[none:YrMo:nk]</column>
-            <column>[federated.csold].[none:lat_ca:qk]</column>
-            <column>[federated.csold].[none:lon_ca:qk]</column>
+            <column>[federated.csold].[none:zip_rank:qk]</column>
           </slices>
           <aggregation value='true' />
         </view>
-        <style />
+        <style>
+          <style-rule element='mark'>
+            <encoding attr='color' field='[federated.csold].[sum:unit:qk]' palette='blue_10_0' type='interpolated' />
+          </style-rule>
+          <style-rule element='map'>
+            <format attr='washout' value='0.5' />
+            <format attr='map-style' value='light' />
+          </style-rule>
+        </style>
         <panes>
           <pane>
             <view>
@@ -442,15 +461,15 @@
             </encodings>
             <style>
               <style-rule element='mark'>
-                <format attr='mark-transparency' value='200' />
+                <format attr='mark-transparency' value='190' />
                 <format attr='has-stroke' value='true' />
                 <format attr='stroke-color' value='#ffffff' />
               </style-rule>
             </style>
           </pane>
         </panes>
-        <rows>[federated.csold].[avg:lat_ca:qk]</rows>
-        <cols>[federated.csold].[avg:lon_ca:qk]</cols>
+        <rows>[federated.csold].[Latitude (generated)]</rows>
+        <cols>[federated.csold].[Longitude (generated)]</cols>
       </table>
     </worksheet>
     <worksheet name='Brokerage Share'>
@@ -887,15 +906,18 @@
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
           <zone h='3750' id='2' type-v2='text' w='100000' x='0' y='96250'>
-            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026. One circle per zip code at the mean coordinates of its sales (88% of rows carry coordinates); color = the measure, size = homes sold. Filters apply to the map.</run></formatted-text>
+            <formatted-text><run fontsize='8'>CRMLS sold, Jan 2024 - Jun 2026, all closed sales; zip codes geocoded by Tableau (junk zips with under a handful of sales excluded). Color = the measure, size = homes sold. Filters apply to both maps; the Brokerage filter turns them into a footprint map for any brand.</run></formatted-text>
           </zone>
           <zone h='48125' id='3' name='Zip Map - Median Price' w='78000' x='0' y='0' />
           <zone h='48125' id='4' name='Zip Map - Homes Sold' w='78000' x='0' y='48125' />
-          <zone h='6875' id='5' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='78000' y='0' />
-          <zone h='6875' id='6' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='78000' y='6875' />
-          <zone h='6875' id='7' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='78000' y='13750' />
-          <zone h='6875' id='8' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='78000' y='20625' />
-          <zone h='6875' id='9' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='78000' y='27500' />
+          <zone h='6500' id='5' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:brokerage:nk]' type-v2='filter' w='22000' x='78000' y='0' />
+          <zone h='6500' id='6' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:YrMo:nk]' type-v2='filter' w='22000' x='78000' y='6500' />
+          <zone h='6500' id='7' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:PostalCode:nk]' type-v2='filter' w='22000' x='78000' y='13000' />
+          <zone h='6500' id='8' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:PropertySubType:nk]' type-v2='filter' w='22000' x='78000' y='19500' />
+          <zone h='6500' id='9' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:CountyOrParish:nk]' type-v2='filter' w='22000' x='78000' y='26000' />
+          <zone h='6500' id='10' mode='checkdropdown' name='Zip Map - Median Price' param='[federated.csold].[none:City:nk]' type-v2='filter' w='22000' x='78000' y='32500' />
+          <zone custom-title='Median Close Price' friendly-name='Color Legend' h='11250' id='11' name='Zip Map - Median Price' pane-specification-id='0' param='[federated.csold].[med:ClosePrice:qk]' show-title='true' type-v2='color' w='22000' x='78000' y='40000' />
+          <zone custom-title='Homes Sold' friendly-name='Color Legend' h='11250' id='12' name='Zip Map - Homes Sold' pane-specification-id='0' param='[federated.csold].[sum:unit:qk]' show-title='true' type-v2='color' w='22000' x='78000' y='52500' />
         </zone>
       </zones>
     </dashboard>

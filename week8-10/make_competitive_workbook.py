@@ -40,7 +40,10 @@ SHARE_FORMULA = "SUM([unit]) / SUM({ EXCLUDE [office_display] : SUM([unit]) }) *
 SOLD_COLS = f"""
       <column caption='Close Date' datatype='date' name='[CloseDate]' role='dimension' type='ordinal' />
       <column caption='Month' datatype='string' name='[YrMo]' role='dimension' type='nominal' />
-      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_FULL}' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Close Price' datatype='real' default-format='{FMT_MONEY_FULL}' name='[ClosePrice]' role='measure' type='quantitative' />
+      <column caption='Sales Volume' datatype='real' default-format='{FMT_MONEY_FULL}' name='[Calculation_volume]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='[ClosePrice]' />
+      </column>
       <column datatype='string' name='[City]' role='dimension' type='nominal' />
       <column caption='County' datatype='string' name='[CountyOrParish]' role='dimension' type='nominal' />
       <column caption='Zip Code' datatype='string' name='[PostalCode]' role='dimension' semantic-role='[ZipCode].[Name]' type='nominal' />
@@ -85,6 +88,7 @@ BM_COLS = f"""
 GEO_DIMS = ["CountyOrParish", "City", "PostalCode", "PropertySubType"]
 FG = {d: i + 1 for i, d in enumerate(GEO_DIMS)}
 FG["YrMo"] = 5
+FG["brokerage"] = 6
 
 
 def datasource(name, hyper, cols):
@@ -254,7 +258,7 @@ def agents_bars(name, by):
 def offices_bars(name, by):
     """Top 100 listing offices as a ranked bar chart, filterable by the four dimensions."""
     rank_col = f"office_rank_{by}"
-    measure_col = "unit" if by == "units" else "ClosePrice"
+    measure_col = "unit" if by == "units" else "Calculation_volume"
     measure_inst = f"[sum:{measure_col}:qk]"
     gdeps, gfilts, gslices = geo_filters(SOLD)
     band_col = f"office_band_{by}"
@@ -272,17 +276,16 @@ def offices_bars(name, by):
 
 
 # ---------------------------------------------------------------------- maps
-def zip_map(name, title, color_inst, color_col, deriv):
-    """Zip-code map: one circle per zip at its mean coordinates, colored by the
-    measure and sized by homes sold. Built from the rows' own Latitude/Longitude."""
-    gdeps, gfilts, gslices = geo_filters(SOLD, month=True)
+def zip_map(name, title, color_inst, color_col, deriv, palette):
+    """Zip-code heat map on Tableau's basemap: zips geocoded by Tableau (PostalCode
+    carries the ZipCode geographic role), one circle per zip, color = the measure,
+    size = homes sold. Filterable by month, the four dimensions, and brokerage."""
+    gdeps, gfilts, gslices = geo_filters(SOLD, dims=GEO_DIMS + ["brokerage"], month=True)
     deps = gdeps + "\n" + "\n".join("            " + x for x in [
-        inst("lat_ca", "None", "qk"), inst("lon_ca", "None", "qk"),
-        inst("lat_ca", "Avg"), inst("lon_ca", "Avg"), inst("unit", "Sum"), inst(color_col, deriv)])
-    gfilts = (gfilts + "\n" + range_filter(SOLD, "lat_ca", 0, 9.9)
-              + "\n" + range_filter(SOLD, "lon_ca", 0, 10.6))
-    gslices = (gslices + f"\n            <column>[{SOLD}].[none:lat_ca:qk]</column>"
-               f"\n            <column>[{SOLD}].[none:lon_ca:qk]</column>")
+        inst("zip_rank", "None", "qk"), inst("unit", "Sum"), inst(color_col, deriv)])
+    filters = gfilts + "\n" + range_filter(SOLD, "zip_rank", 1, 1500)
+    slices = gslices + f"\n            <column>[{SOLD}].[none:zip_rank:qk]</column>"
+    extra = "          <mapsources>\n            <mapsource name='Tableau' />\n          </mapsources>"
     panes = f"""          <pane>
             <view>
               <breakdown value='auto' />
@@ -295,14 +298,24 @@ def zip_map(name, title, color_inst, color_col, deriv):
             </encodings>
             <style>
               <style-rule element='mark'>
-                <format attr='mark-transparency' value='200' />
+                <format attr='mark-transparency' value='190' />
                 <format attr='has-stroke' value='true' />
                 <format attr='stroke-color' value='#ffffff' />
               </style-rule>
             </style>
           </pane>"""
-    return sheet(name, SOLD, title, deps, gfilts, gslices, panes,
-                 f"[{SOLD}].[avg:lat_ca:qk]", f"[{SOLD}].[avg:lon_ca:qk]", style="        <style />")
+    style = f"""        <style>
+          <style-rule element='mark'>
+            <encoding attr='color' field='[{SOLD}].{color_inst}' palette='{palette}' type='interpolated' />
+          </style-rule>
+          <style-rule element='map'>
+            <format attr='washout' value='0.5' />
+            <format attr='map-style' value='light' />
+          </style-rule>
+        </style>"""
+    return sheet(name, SOLD, title, deps, filters, slices, panes,
+                 f"[{SOLD}].[Latitude (generated)]", f"[{SOLD}].[Longitude (generated)]",
+                 extra_view=extra, style=style)
 
 
 # ------------------------------------------------------------- brokerage power
@@ -451,6 +464,12 @@ class Dash:
         self.zones.append(f"          <zone h='{b['h']}' id='{self._id()}' mode='checkdropdown' name='{s}' "
                           f"param='[{ds}].[none:{dim}:nk]' type-v2='filter' w='{b['w']}' x='{b['x']}' y='{b['y']}' />")
 
+    def legend(self, s, param, title, x, y, w, h):
+        b = px(x, y, w, h)
+        self.zones.append(f"          <zone custom-title='{title}' friendly-name='Color Legend' h='{b['h']}' id='{self._id()}' "
+                          f"name='{s}' pane-specification-id='0' param='[{SOLD}].{param}' show-title='true' "
+                          f"type-v2='color' w='{b['w']}' x='{b['x']}' y='{b['y']}' />")
+
     def xml(self):
         n = px(0, 770, 1000, 30)
         return f"""    <dashboard name='{self.name}'>
@@ -503,10 +522,10 @@ def main():
         agents_bars("Agents by Volume", "volume"),
         offices_bars("Offices by Units", "units"),
         offices_bars("Offices by Volume", "volume"),
-        zip_map("Zip Map - Median Price", "Median close price by zip code (color = median price, size = homes sold)",
-                "[med:ClosePrice:qk]", "ClosePrice", "Median"),
-        zip_map("Zip Map - Homes Sold", "Homes sold by zip code (color and size = homes sold)",
-                "[sum:unit:qk]", "unit", "Sum"),
+        zip_map("Zip Map - Median Price", "Median close price by zip code (color = median price, size = homes sold) -- pick a Brokerage to see where each brand sells",
+                "[med:ClosePrice:qk]", "ClosePrice", "Median", "green_10_0"),
+        zip_map("Zip Map - Homes Sold", "Homes sold by zip code (color and size = homes sold) -- pick a Brokerage to see each brand's footprint",
+                "[sum:unit:qk]", "unit", "Sum", "blue_10_0"),
         share_lines(),
         opendoor_bars(),
         kpi("KPI Compass Share", "Compass share of listing sides, 2026 H1", "[avg:share_pct:qk]", "share_pct", "Avg", ["Compass"], H1_2026),
@@ -519,8 +538,9 @@ def main():
     note_state = ("CRMLS sold, Jan 2024 - Jun 2026, 455,449 closed sales; 255 placeholder records (NONMEMBER etc.) "
                   "excluded from rankings and share denominators. Units = closed sales; volume = sum of close price.")
     note_geo = note_state + " Filters apply to every view on this tab."
-    note_map = ("CRMLS sold, Jan 2024 - Jun 2026. One circle per zip code at the mean coordinates of its sales "
-                "(88% of rows carry coordinates); color = the measure, size = homes sold. Filters apply to the map.")
+    note_map = ("CRMLS sold, Jan 2024 - Jun 2026, all closed sales; zip codes geocoded by Tableau (junk zips with under "
+                "a handful of sales excluded). Color = the measure, size = homes sold. Filters apply to both maps; "
+                "the Brokerage filter turns them into a footprint map for any brand.")
     note_brok = ("Brokerage brands resolved from normalized office names (Compass / Keller Williams / Coldwell Banker / "
                  "RE/MAX / eXp / Berkshire / Century 21 / Sotheby's / Redfin / Real Broker / Equity Union / Opendoor / "
                  "Others). Share = brand listing sides / all listing sides that month. 2026 is January-June only.")
@@ -542,8 +562,10 @@ def main():
     d3 = Dash("Zip Code Heatmaps", note_map)
     d3.sheet("Zip Map - Median Price", 0, 0, 780, 385)
     d3.sheet("Zip Map - Homes Sold", 0, 385, 780, 385)
-    for i, dim in enumerate(["YrMo", "PostalCode", "PropertySubType", "CountyOrParish", "City"]):
-        d3.card(SOLD, dim, "Zip Map - Median Price", 780, i * 55, 220, 55)
+    for i, dim in enumerate(["brokerage", "YrMo", "PostalCode", "PropertySubType", "CountyOrParish", "City"]):
+        d3.card(SOLD, dim, "Zip Map - Median Price", 780, i * 52, 220, 52)
+    d3.legend("Zip Map - Median Price", "[med:ClosePrice:qk]", "Median Close Price", 780, 320, 220, 90)
+    d3.legend("Zip Map - Homes Sold", "[sum:unit:qk]", "Homes Sold", 780, 420, 220, 90)
 
     d7 = Dash("Brokerage Power", note_brok)
     for i, k in enumerate(["KPI Compass Share", "KPI Compass Volume", "KPI Real Broker Share", "KPI Opendoor Sides"]):
