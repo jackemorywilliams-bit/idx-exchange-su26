@@ -73,12 +73,12 @@ def chart_supply(c, x, y, w, h):
     """Grouped bars: new listings vs closed sales by year. (x,y)=bottom-left."""
     c.setFont("Helvetica-Bold", 8)
     c.setFillColor(INK)
-    c.drawCentredString(x + w / 2, y + h - 8, "New listings vs. closed sales")
+    c.drawCentredString(x + w / 2, y + h - 8, "New listings vs. closed sales, Jan–Jun of each year")
     base, top = y + 14, y + h - 30
-    scale = (top - base) / 26326.0
-    data = [("2024", 26183, 25559, "26.2K", "25.6K"),
-            ("2025", 26326, 25615, "26.3K", "25.6K"),
-            ("2026 (Jan–Jun)", 17691, 13047, "17.7K", "13.0K")]
+    scale = (top - base) / 17691.0
+    data = [("H1 2024", 14136, 13065, "14.1K", "13.1K"),
+            ("H1 2025", 14396, 13053, "14.4K", "13.1K"),
+            ("H1 2026", 17691, 13047, "17.7K", "13.0K")]
     bw, gap, group = 26, 4, (w - 30) / 3.0
     for i, (lab, l, s, ll, sl) in enumerate(data):
         gx = x + 18 + i * group + (group - (2 * bw + gap)) / 2
@@ -98,13 +98,13 @@ def chart_supply(c, x, y, w, h):
     c.setFont("Helvetica-Oblique", 6.2)
     c.setFillColor(GRAY)
     g0 = x + 18 + (group - (2 * 26 + 4)) / 2
-    c.drawCentredString(g0 + 13, base + 26183 * scale + 11, "listings")
+    c.drawCentredString(g0 + 13, base + 14136 * scale + 11, "listings")
     c.setFillColor(HexColor("#ffffff"))
-    c.drawCentredString(g0 + 43, base + 25559 * scale - 9, "sold")
+    c.drawCentredString(g0 + 43, base + 13065 * scale - 9, "sold")
     gx2 = x + 18 + 2 * group + (group - (2 * 26 + 4)) / 2
     c.setFillColor(RED)
     c.setFont("Helvetica-Bold", 7)
-    c.drawCentredString(gx2 + 28, base + 17691 * scale + 20, "gap opens: +4.7K")
+    c.drawRightString(gx2 - 5, base + 16600 * scale, "+23% supply, flat sales →")
     c.setStrokeColor(INK)
     c.setLineWidth(0.8)
     c.line(x + 6, base - 1, x + w - 6, base - 1)
@@ -149,7 +149,7 @@ def main():
     y -= 20
     c.setFont("Times-Italic", 10.3)
     c.drawString(M, y - 10, "CRMLS residential, January 2024 – June 2026 — "
-                            "prices froze; the market-makers didn’t.")
+                            "prices froze; the competitive order didn’t.")
     y -= 14
     c.setFont("Helvetica", 6.9)
     c.setFillColor(GRAY)
@@ -164,8 +164,8 @@ def main():
     tw, th, tg = (CW - 3 * 8) / 4.0, 46, 8
     labels = [("$600K", ["median close price — unchanged", "2024, 2025, and 2026 H1"]),
               ("$321", ["median price per sq ft —", "unchanged all three years"]),
-              ("34 days", ["avg days on market, 2026 H1", "(31 in 2024)"]),
-              ("98.0%", ["avg sale-to-ask ratio, 2026 H1", "(98.6% in 2024)"])]
+              ("34 days", ["days on market, 2026 H1 — IQR-", "filtered avg (31 in 2024)"]),
+              ("98.0%", ["sale-to-ask, 2026 H1 — IQR-", "filtered avg (98.6% in 2024)"])]
     for i, (n, ls) in enumerate(labels):
         tile(c, M + i * (tw + tg), y - th, tw, th, n, ls)
     y -= th + 10
@@ -173,9 +173,11 @@ def main():
     y = heading(c, "Market Overview", M, y)
     y = para(c, "Riverside’s price level has not moved in thirty months — the change is in "
                 "how long selling takes. The median closed at exactly <b>$600,000</b> in 2024, in 2025, "
-                "and again through June 2026: a round-number focal price, corroborated by a per-square-foot "
-                "median likewise frozen at <b>$321</b>, which rules out a mix-shift artifact. What drifted "
-                "is pace — average days on market rose from 31 to 34, about 10% slower.", M, y, CW)
+                "and again through June 2026, corroborated by a per-square-foot median likewise frozen at "
+                "<b>$321</b>, which makes a mix-shift artifact unlikely. Nor is it clustering at a headline "
+                "number: only 1.1% of closings land exactly at $600,000 and 3.1% within $5,000 of it, so the "
+                "frozen median reflects a stable price distribution. What drifted is pace — average days on "
+                "market rose from 31 to 34, about 10% slower.", M, y, CW)
     y -= 7
 
     y = heading(c, "Pricing Trends", M, y)
@@ -187,10 +189,11 @@ def main():
     col_w = (CW - 22) / 2.0
     lx, rx = M, M + col_w + 22
     ly = heading(c, "Market Activity", lx, y)
-    ly = para(c, "2026 is the first year supply pulled away from sales: <b><font color='#1f6f43'>1.36 new "
-                 "listings per closed sale</font></b> in H1 2026, versus roughly 1.02 in each of the two "
-                 "prior years — a gap of +4,644 listings over sales in six months. H1 sales (13,047) "
-                 "run at about half of either prior full year, before seasonal adjustment.", lx, ly, col_w)
+    ly = para(c, "Comparing like halves of the year, 2026 is the first time supply pulled away from "
+                 "sales: January–June listings ran 14,136 → 14,396 → <b><font color='#1f6f43'>17,691 "
+                 "(+23%)</font></b>, while January–June sales were 13,065 → 13,053 → 13,047 — flat to "
+                 "within 18 transactions. New listings per closed sale: <b>1.08 → 1.10 → 1.36</b>.",
+              lx, ly, col_w)
     chart_supply(c, lx, ly - 158, col_w, 152)
 
     ry = heading(c, "Competitive Landscape", rx, y)
@@ -202,7 +205,8 @@ def main():
                  "<b>5.5→4.9%</b> and Opendoor wound down <b>0.8→0.2%</b>. It mirrors California "
                  "at large: Compass leads the state at $23.7B of 2024 volume, insurgent brands are doubling "
                  "their affordable-tier share — and only 21 of 500 (then 16 of 495) top producers "
-                 "changed brands, so the race is being won through listing acquisition, not agent movement.",
+                 "changed brands, so the race is being won through listing acquisition, not agent "
+                 "movement (statewide figures computed from the same extract; see footnote).",
               rx, ry, col_w)
     chart_offices(c, rx, ry - 120, col_w, 114)
 
@@ -212,14 +216,14 @@ def main():
     takeaways = [
         "<b>Prices haven’t moved:</b> median $600,000 and $321/sq ft are flat across 2024–2026, "
         "while days on market drifted from 31 to 34.",
-        "<b>Supply is pulling ahead:</b> H1 2026 logged 1.36 new listings per closed sale versus ~1.02 in "
-        "both prior years — the widest gap in the window.",
+        "<b>Supply is pulling ahead:</b> like-for-like, Jan–Jun listings jumped 14.1K → 14.4K → 17.7K (+23%) "
+        "while Jan–Jun sales stayed flat within 18 transactions (1.08 → 1.10 → 1.36 listings per sale).",
         "<b>The top is a dead heat:</b> Equity Union (473 sides) leads Coldwell Banker Realty (457) and "
         "Compass (453) by under 5% in 2026 H1.",
         "<b>Share shifted even as volume froze:</b> Coldwell 6.3→7.0%, Century 21 3.4→4.4%, "
         "Compass 3.1→3.9%; Keller Williams 5.5→4.9%, Opendoor 0.8→0.2%.",
-        "<b>What to watch:</b> if listings-per-sale holds above ~1.2 through H2 2026, the first crack in "
-        "the $600K median should appear in sale-to-ask before it appears in price.",
+        "<b>What to watch:</b> if H2 2026 sustains the H1 supply gap, the first crack in the $600K median "
+        "should appear in sale-to-ask before it appears in price.",
     ]
     for t in takeaways:
         y = para(c, "•&nbsp;&nbsp;" + t, M + 2, y, CW - 4, BULLET) - 2
@@ -228,11 +232,12 @@ def main():
     c.setStrokeColor(TILE_BD)
     c.setLineWidth(0.7)
     c.line(M, fy, W - M, fy)
-    para(c, "CRMLS closed residential sales, Riverside County, Jan 2024 – Jun 2026; 2026 = Jan–Jun "
-            "only, never annualized. 255 placeholder records excluded from rankings; sale-to-ask guarded to "
-            "(0,2]; DOM and ratio averages on the IQR-filtered base; medians and counts on all rows. Mid-year "
-            "the listings-per-sale ratio is upward-biased (some H1 listings close in H2); the direction of the "
-            "2026 gap survives the bias. Dashboards: public.tableau.com/app/profile/emory.williams · "
+    para(c, "CRMLS closed residential sales, Riverside County, Jan 2024 – Jun 2026. Supply–sales "
+            "comparisons are Jan–Jun of each year (like-for-like; no annualization anywhere). 255 placeholder "
+            "records excluded from rankings; sale-to-ask guarded to (0,2]; DOM and sale-to-ask tiles are "
+            "IQR-filtered averages, price tiles are all-rows medians. Statewide figures (Compass volume, "
+            "producer-switch counts, tier shares) are computed from the same statewide CRMLS extract with the "
+            "same rules — no external sources. Dashboards: public.tableau.com/app/profile/emory.williams · "
             "Code: github.com/jackemorywilliams-bit/idx-exchange-su26", M, fy - 4, CW, FOOT)
 
     c.showPage()
