@@ -934,7 +934,8 @@
           <zone h='18750' id='5' name='KPI Real Broker Share' w='25000' x='50000' y='0' />
           <zone h='18750' id='6' name='KPI Opendoor Sides' w='25000' x='75000' y='0' />
           <zone h='77500' id='7' name='Brokerage Share' w='62000' x='0' y='18750' />
-          <zone h='77500' id='8' name='Opendoor Listing Sides' w='38000' x='62000' y='18750' />
+          <zone h='55000' id='8' name='Opendoor Listing Sides' w='38000' x='62000' y='18750' />
+          <zone friendly-name='Color Legend' h='22500' id='9' name='Brokerage Share' pane-specification-id='0' param='[federated.brokerages].[none:brokerage:nk]' show-title='true' type-v2='color' w='38000' x='62000' y='73750' />
         </zone>
       </zones>
     </dashboard>

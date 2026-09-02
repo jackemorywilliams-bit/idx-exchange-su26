@@ -571,7 +571,10 @@ def main():
     for i, k in enumerate(["KPI Compass Share", "KPI Compass Volume", "KPI Real Broker Share", "KPI Opendoor Sides"]):
         d7.sheet(k, i * 250, 0, 250, 150)
     d7.sheet("Brokerage Share", 0, 150, 620, 620)
-    d7.sheet("Opendoor Listing Sides", 620, 150, 380, 620)
+    d7.sheet("Opendoor Listing Sides", 620, 150, 380, 440)
+    d7.zones.append(f"          <zone friendly-name='Color Legend' h='{int(180*125)}' id='{d7._id()}' "
+                    f"name='Brokerage Share' pane-specification-id='0' param='[{BM}].[none:brokerage:nk]' "
+                    f"show-title='true' type-v2='color' w='{int(380*100)}' x='{int(620*100)}' y='{int(590*125)}' />")
 
     dbs = [d1, d2, d3, d7]
     windows = [window("dashboard", d.name, sheets=d.sheets, first=(i == 0)) for i, d in enumerate(dbs)]

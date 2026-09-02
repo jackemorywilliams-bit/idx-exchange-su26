@@ -47,6 +47,8 @@ week8-10/
   make_competitive_workbook.py  # generates competitive_analysis.twb (ranked tables, zip heat maps, Brokerage Power)
   competitive_analysis.twb # generated structure (no data rows)
   img/                     # rendered previews of the published dashboard tabs
+week11-12/
+  market_intelligence_report.html  # the 1-page Riverside report (print to PDF for submission)
 ```
 
 Data CSVs, Excel files, Tableau `.twbx` workbooks, and `.hyper` extracts are gitignored — this repo holds code and documentation only. The committed `.twb` is pure XML structure (chart definitions, no data rows); per the program's direction, the data-bearing workbook is published to Tableau Public rather than committed.
@@ -395,3 +397,7 @@ Two scripts in `week8-10/`:
 2. `python3 week8-10/make_market_workbook.py` regenerates `market_analysis.twb` (worksheets hidden; add `--show-sheets` to inspect worksheets).
 3. Open it in Tableau Public Desktop, check each tab against the numbers in the script RUN LOGs, then **File → Save to Tableau Public As…** under the same name to replace the published version.
 4. Commit the generator + `.twb` + refreshed previews; the README's Week section gets the change note.
+
+### Weeks 11–12 — Market Intelligence Report: "Prices froze; the market-makers didn't."
+
+The 1-page report ([week11-12/market_intelligence_report.html](week11-12/market_intelligence_report.html), print-to-PDF for submission) follows the handbook's five required sections on Riverside County and carries the summer's central finding: **the median close price sat at exactly $600,000 — and $321 per square foot — for all thirty months of the window, while the competitive order changed underneath it.** Supply pulled away from sales in 2026 (1.36 new listings per closed sale vs ~1.02 in 2024–25, stated as a within-period ratio so seasonality cancels); a regional independent, Equity Union, now runs the county's #1 office in a 20-side dead heat with Coldwell Banker Realty and Compass; the last iBuyer wound down to 0.2% of listings; and across California the brokerage race is stratifying by price tier — Compass consolidating the mid tier (8.7→10.0% of listing sides), insurgents doubling in affordable-tier counties — with essentially no star-poaching: only 21 of 500, then 16 of 495, top producers changed brands year-over-year. Every figure is reproducible from the scripts in this repo; small-n figures are reported as raw counts, and 2026 is always labeled H1.

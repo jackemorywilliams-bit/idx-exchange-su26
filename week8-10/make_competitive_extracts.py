@@ -117,8 +117,10 @@ def main():
     df["unit"] = 1  # SUM(unit) = units sold; reads as "Units Sold" in Measure Names
     # Zip codes ranked by closed sales (1 = most) so the zip heat maps can show the
     # busiest zips with a plain range filter.
-    zr = df.groupby("PostalCode").size().rank(ascending=False, method="first").astype(int)
+    ca_zip = df.PostalCode.str.match(r"^9[0-6]\d{3}$", na=False)
+    zr = df[ca_zip].groupby("PostalCode").size().rank(ascending=False, method="first").astype(int)
     df["zip_rank"] = df.PostalCode.map(zr).fillna(99999).astype(int)
+    print(f"zips ranked (CA-format only): {int(ca_zip.sum()):,} rows; non-CA-format excluded from maps: {int((~ca_zip).sum()):,}")
     # Rank bands page the 100-row tables into 25-row views a fixed dashboard can show legibly.
     band = lambda r: ("01-25" if r <= 25 else "26-50" if r <= 50 else "51-75" if r <= 75 else "76-100" if r <= 100 else "100+")
     df["office_band_units"] = df.office_rank_units.map(band)
