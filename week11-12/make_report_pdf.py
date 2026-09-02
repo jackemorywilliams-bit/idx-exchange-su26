@@ -31,9 +31,9 @@ TILE_BG = HexColor("#faf8f4")
 TILE_BD = HexColor("#c9c2b6")
 GREEN = HexColor("#1f6f43")
 
-BODY = ParagraphStyle("body", fontName="Times-Roman", fontSize=9.3, leading=11.7,
+BODY = ParagraphStyle("body", fontName="Times-Roman", fontSize=9.0, leading=11.2,
                       textColor=INK, alignment=4)  # justified
-BULLET = ParagraphStyle("bullet", parent=BODY, fontSize=8.9, leading=11.0,
+BULLET = ParagraphStyle("bullet", parent=BODY, fontSize=8.7, leading=10.4,
                         leftIndent=10, bulletIndent=0)
 FOOT = ParagraphStyle("foot", fontName="Times-Roman", fontSize=6.6, leading=8.2,
                       textColor=LGRAY, alignment=0)
@@ -161,69 +161,77 @@ def main():
     c.line(M, y, W - M, y)
     y -= 8
 
-    tw, th, tg = (CW - 3 * 8) / 4.0, 46, 8
+    tw, th, tg = (CW - 3 * 8) / 4.0, 44, 8
     labels = [("$600K", ["median close price — unchanged", "2024, 2025, and 2026 H1"]),
               ("$321", ["median price per sq ft —", "unchanged all three years"]),
               ("34 days", ["days on market, 2026 H1 — IQR-", "filtered avg (31 in 2024)"]),
               ("98.0%", ["sale-to-ask, 2026 H1 — IQR-", "filtered avg (98.6% in 2024)"])]
     for i, (n, ls) in enumerate(labels):
         tile(c, M + i * (tw + tg), y - th, tw, th, n, ls)
-    y -= th + 10
+    y -= th + 8
+    y = para(c, "<i>This report tracks two things: what homes cost in Riverside County, and which companies "
+                "sell them. The short version — prices have not moved in two and a half years, but the "
+                "competition among the companies selling those homes has changed hands.</i>", M, y, CW)
+    y -= 6
 
     y = heading(c, "Market Overview", M, y)
-    y = para(c, "Riverside’s price level has not moved in thirty months — the change is in "
-                "how long selling takes. The median closed at exactly <b>$600,000</b> in 2024, in 2025, "
-                "and again through June 2026, corroborated by a per-square-foot median likewise frozen at "
-                "<b>$321</b>, which makes a mix-shift artifact unlikely. Nor is it clustering at a headline "
-                "number: only 1.1% of closings land exactly at $600,000 and 3.1% within $5,000 of it, so the "
-                "frozen median reflects a stable price distribution. What drifted is pace — average days on "
-                "market rose from 31 to 34, about 10% slower.", M, y, CW)
-    y -= 7
+    y = para(c, "The median sale — the middle home, half sold for more and half for less — closed at "
+                "exactly <b>$600,000</b> in 2024, in 2025, and again through June 2026. Price per square "
+                "foot, which corrects for the size of homes sold, is likewise frozen at <b>$321</b> — so this "
+                "is not an illusion created by bigger or smaller homes changing hands (fewer than 2% of sales "
+                "land exactly at $600,000, so it is a market-wide plateau, not a quirk of round numbers). "
+                "What did change is speed: the typical home now takes <b>34 days</b> to sell, up from 31 — "
+                "about 10% slower.", M, y, CW)
+    y -= 5
 
     y = heading(c, "Pricing Trends", M, y)
-    y = para(c, "Sellers are conceding at the margin, not on price. The sale-to-ask ratio slipped from "
-                "0.986 to 0.980 — under one point, but every year of the window closed below asking. "
-                "Negotiation, not repricing, is the only pricing dial that has moved.", M, y, CW)
-    y -= 8
+    y = para(c, "The sale-to-ask ratio compares what a home sold for against what the seller asked. At "
+                "today’s <b>98.0%</b>, buyers pay about $98,000 for every $100,000 of asking price — down "
+                "from $98,600 in 2024. Sellers are not cutting their asking prices; they are giving a little "
+                "more ground in negotiation. That is the only pricing dial that has moved.", M, y, CW)
+    y -= 6
 
     col_w = (CW - 22) / 2.0
     lx, rx = M, M + col_w + 22
     ly = heading(c, "Market Activity", lx, y)
-    ly = para(c, "Comparing like halves of the year, 2026 is the first time supply pulled away from "
-                 "sales: January–June listings ran 14,136 → 14,396 → <b><font color='#1f6f43'>17,691 "
-                 "(+23%)</font></b>, while January–June sales were 13,065 → 13,053 → 13,047 — flat to "
-                 "within 18 transactions. New listings per closed sale: <b>1.08 → 1.10 → 1.36</b>.",
+    ly = para(c, "Comparing the same six months of each year: the number of homes <i>put up for sale</i> "
+                 "jumped from about 14,100 to <b><font color='#1f6f43'>17,691 (+23%)</font></b> in early "
+                 "2026, while the number that actually <i>sold</i> stayed flat — 13,065, 13,053, then "
+                 "13,047. More homes are coming to market than are selling, so unsold homes are piling up "
+                 "and buyers have more to choose from — the classic setup for price pressure later.",
               lx, ly, col_w)
-    chart_supply(c, lx, ly - 158, col_w, 152)
+    chart_supply(c, lx, ly - 142, col_w, 136)
 
     ry = heading(c, "Competitive Landscape", rx, y)
-    ry = para(c, "While volume froze, the leaderboard reshuffled. A regional independent — Equity "
-                 "Union — now runs the county’s <b>#1 office</b> by closed listing sides, in a "
-                 "20-side dead heat with Coldwell Banker Realty and Compass. At brand level, Coldwell "
-                 "Banker remains largest and growing (<b>6.3→7.0%</b> of listing sides), Century 21 "
-                 "<b>3.4→4.4%</b>, Compass <b>3.1→3.9%</b>; Keller Williams slipped "
-                 "<b>5.5→4.9%</b> and Opendoor wound down <b>0.8→0.2%</b>. It mirrors California "
-                 "at large: Compass leads the state at $23.7B of 2024 volume, insurgent brands are doubling "
-                 "their affordable-tier share — and only 21 of 500 (then 16 of 495) top producers "
-                 "changed brands, so the race is being won through listing acquisition, not agent "
-                 "movement (statewide figures computed from the same extract; see footnote).",
-              rx, ry, col_w)
-    chart_offices(c, rx, ry - 120, col_w, 114)
+    ry = para(c, "Every sale credits one office as the seller’s representative — a “listing side,” "
+                 "the scoreboard of this business. By that score, a Southern California independent, "
+                 "<b>Equity Union</b>, now runs the county’s <b>#1 office</b>, twenty sides ahead of "
+                 "national names Coldwell Banker Realty and Compass. Among brands (one brand operates many "
+                 "offices), Coldwell Banker grew from 6.3% to <b>7.0%</b> of sides, Century 21 to "
+                 "<b>4.4%</b>, Compass to <b>3.9%</b>; Keller Williams slipped to <b>4.9%</b>. "
+                 "<b>Opendoor</b> — the tech “iBuyer” that bought homes for cash and resold them — has "
+                 "nearly left: 0.8% of listings down to <b>0.2%</b>; statewide, buy-to-resell investor "
+                 "flips are just 4.7% of sales. The same pattern holds across California: Compass leads the "
+                 "state at $23.7B of 2024 volume, low-fee newcomers are doubling their share in affordable "
+                 "areas, and almost no top agents switch firms (21 of 500 one year, 16 of 495 the next) — "
+                 "companies win by attracting home sellers, not by hiring away star agents (statewide "
+                 "figures from the same data; see footnote).", rx, ry, col_w)
+    chart_offices(c, rx, ry - 110, col_w, 104)
 
-    y = min(ly - 158, ry - 120) - 14
+    y = min(ly - 142, ry - 110) - 12
 
     y = heading(c, "Key Takeaways", M, y)
     takeaways = [
-        "<b>Prices haven’t moved:</b> median $600,000 and $321/sq ft are flat across 2024–2026, "
-        "while days on market drifted from 31 to 34.",
-        "<b>Supply is pulling ahead:</b> like-for-like, Jan–Jun listings jumped 14.1K → 14.4K → 17.7K (+23%) "
-        "while Jan–Jun sales stayed flat within 18 transactions (1.08 → 1.10 → 1.36 listings per sale).",
-        "<b>The top is a dead heat:</b> Equity Union (473 sides) leads Coldwell Banker Realty (457) and "
-        "Compass (453) by under 5% in 2026 H1.",
-        "<b>Share shifted even as volume froze:</b> Coldwell 6.3→7.0%, Century 21 3.4→4.4%, "
-        "Compass 3.1→3.9%; Keller Williams 5.5→4.9%, Opendoor 0.8→0.2%.",
-        "<b>What to watch:</b> if H2 2026 sustains the H1 supply gap, the first crack in the $600K median "
-        "should appear in sale-to-ask before it appears in price.",
+        "<b>The price of a Riverside home hasn’t moved in 2½ years</b> — $600,000 median, $321 per "
+        "square foot — but each sale takes a few days longer than it used to.",
+        "<b>More sellers, same number of buyers:</b> homes listed for sale jumped 23% in early 2026 while "
+        "purchases stayed flat — inventory is building, which favors buyers.",
+        "<b>Who sells Riverside changed:</b> a local independent, Equity Union, now edges out the national "
+        "brands — #1 by a margin of just 20 sales over Coldwell Banker Realty and Compass.",
+        "<b>The cash-offer experiment ended here:</b> Opendoor, the app that bought homes directly, fell "
+        "from 0.8% to 0.2% of listings; traditional agents kept the market.",
+        "<b>What to watch:</b> if supply keeps outrunning sales, expect buyers to win bigger discounts "
+        "first (the sale-to-ask ratio), and asking prices to bend only after that.",
     ]
     for t in takeaways:
         y = para(c, "•&nbsp;&nbsp;" + t, M + 2, y, CW - 4, BULLET) - 2
