@@ -149,7 +149,7 @@ def main():
     y -= 20
     c.setFont("Times-Italic", 10.3)
     c.drawString(M, y - 10, "CRMLS residential, January 2024 – June 2026 — "
-                            "prices froze; the competitive order didn’t.")
+                            "what a frozen market costs the buyer, and who sells it now.")
     y -= 14
     c.setFont("Helvetica", 6.9)
     c.setFillColor(GRAY)
@@ -168,70 +168,73 @@ def main():
               ("98.0%", ["sale-to-ask, 2026 H1 — IQR-", "filtered avg (98.6% in 2024)"])]
     for i, (n, ls) in enumerate(labels):
         tile(c, M + i * (tw + tg), y - th, tw, th, n, ls)
-    y -= th + 8
-    y = para(c, "<i>This report tracks two things: what homes cost in Riverside County, and which companies "
-                "sell them. The short version — prices have not moved in two and a half years, but the "
-                "competition among the companies selling those homes has changed hands.</i>", M, y, CW)
+    y -= th + 6
+    y = para(c, "<i>This report connects two things: what it costs a family to buy a home in Riverside "
+                "County, and who profits from selling it. Prices have been frozen for two and a half years, "
+                "mortgage rates never left the 6–7% band — and the squeeze that puts on buyers is "
+                "redrawing the industry that sells to them.</i>", M, y, CW)
     y -= 6
 
-    y = heading(c, "Market Overview", M, y)
+    y = heading(c, "Market Overview — the buyer’s math", M, y)
     y = para(c, "The median sale — the middle home, half sold for more and half for less — closed at "
-                "exactly <b>$600,000</b> in 2024, in 2025, and again through June 2026. Price per square "
-                "foot, which corrects for the size of homes sold, is likewise frozen at <b>$321</b> — so this "
-                "is not an illusion created by bigger or smaller homes changing hands (fewer than 2% of sales "
-                "land exactly at $600,000, so it is a market-wide plateau, not a quirk of round numbers). "
-                "What did change is speed: the typical home now takes <b>34 days</b> to sell, up from 31 — "
-                "about 10% slower.", M, y, CW)
+                "exactly <b>$600,000</b> in 2024, in 2025, and again through June 2026 (price per square "
+                "foot likewise frozen at <b>$321</b>; fewer than 2% of sales land exactly at $600,000 — a "
+                "real plateau, not a mix shift or rounding quirk). For the buyer, frozen does "
+                "not mean affordable: with 20% down at the period’s average 6.58% mortgage rate, that median "
+                "home costs about <b>$3,060 a month</b> before taxes and insurance — roughly $1.58 million "
+                "over the life of the loan. A family that waited the entire thirty months for relief got "
+                "<b>$48 a month</b> of it — all from rates (6.64%→6.49%), none from price. Homes also sell "
+                "about 10% slower (<b>34 days</b>, up from 31).", M, y, CW)
     y -= 5
 
     y = heading(c, "Pricing Trends", M, y)
     y = para(c, "The sale-to-ask ratio compares what a home sold for against what the seller asked. At "
-                "today’s <b>98.0%</b>, buyers pay about $98,000 for every $100,000 of asking price — down "
-                "from $98,600 in 2024. Sellers are not cutting their asking prices; they are giving a little "
-                "more ground in negotiation. That is the only pricing dial that has moved.", M, y, CW)
+                "today’s <b>98.0%</b>, buyers pay about $98,000 per $100,000 of asking price — down from "
+                "$98,600 in 2024. On the median home that is roughly <b>$12,000 negotiated off</b> — so far, "
+                "the only relief buyers have actually won. Sellers concede in negotiation; they do not cut "
+                "the asking price.", M, y, CW)
     y -= 6
 
     col_w = (CW - 22) / 2.0
     lx, rx = M, M + col_w + 22
     ly = heading(c, "Market Activity", lx, y)
-    ly = para(c, "Comparing the same six months of each year: the number of homes <i>put up for sale</i> "
-                 "jumped from about 14,100 to <b><font color='#1f6f43'>17,691 (+23%)</font></b> in early "
-                 "2026, while the number that actually <i>sold</i> stayed flat — 13,065, 13,053, then "
-                 "13,047. More homes are coming to market than are selling, so unsold homes are piling up "
-                 "and buyers have more to choose from — the classic setup for price pressure later.",
-              lx, ly, col_w)
-    chart_supply(c, lx, ly - 142, col_w, 136)
+    ly = para(c, "Why didn’t 6%+ mortgages pull prices down? Scarcity. In 2024–25, barely more homes were "
+                 "listed than sold (about 1.05 per sale) — with so little to choose from, buyers absorbed "
+                 "the full cost of high rates and prices never budged. Early 2026 is the first crack: homes "
+                 "<i>put up for sale</i> jumped to <b><font color='#1f6f43'>17,691 (+23%)</font></b> while "
+                 "purchases stayed flat (13,065 → 13,053 → 13,047). Inventory is finally building, and "
+                 "choice is the first leverage buyers have been handed in this window.", lx, ly, col_w)
+    chart_supply(c, lx, ly - 130, col_w, 124)
 
     ry = heading(c, "Competitive Landscape", rx, y)
     ry = para(c, "Every sale credits one office as the seller’s representative — a “listing side,” "
-                 "the scoreboard of this business. By that score, a Southern California independent, "
-                 "<b>Equity Union</b>, now runs the county’s <b>#1 office</b>, twenty sides ahead of "
-                 "national names Coldwell Banker Realty and Compass. Among brands (one brand operates many "
-                 "offices), Coldwell Banker grew from 6.3% to <b>7.0%</b> of sides, Century 21 to "
-                 "<b>4.4%</b>, Compass to <b>3.9%</b>; Keller Williams slipped to <b>4.9%</b>. "
-                 "<b>Opendoor</b> — the tech “iBuyer” that bought homes for cash and resold them — has "
-                 "nearly left: 0.8% of listings down to <b>0.2%</b>; statewide, buy-to-resell investor "
-                 "flips are just 4.7% of sales. The same pattern holds across California: Compass leads the "
-                 "state at $23.7B of 2024 volume, low-fee newcomers are doubling their share in affordable "
-                 "areas, and almost no top agents switch firms (21 of 500 one year, 16 of 495 the next) — "
-                 "companies win by attracting home sellers, not by hiring away star agents (statewide "
-                 "figures from the same data; see footnote).", rx, ry, col_w)
-    chart_offices(c, rx, ry - 110, col_w, 104)
+                 "the scoreboard of this business. By that score a Southern California independent, <b>Equity "
+                 "Union</b>, now runs the county’s <b>#1 office</b>, twenty sides ahead of national names "
+                 "Coldwell Banker Realty and Compass; Keller Williams slipped to <b>4.9%</b> of sides and "
+                 "<b>Opendoor</b> — the app that bought homes for cash — has nearly left (0.8%→<b>0.2%</b>). "
+                 "The consumer squeeze and this reshuffle are connected: across California, low-fee and "
+                 "virtual brokerages are growing fastest exactly where affordability bites hardest — "
+                 "doubling their share in affordable-tier counties like Riverside while barely moving in "
+                 "premium ones — and almost no top agents switch firms (21 of 500 one year, 16 of 495 the "
+                 "next). Cost-pressed sellers changing whom they hire, not agent poaching, is what is moving "
+                 "market share (statewide figures from the same data; see footnote).", rx, ry, col_w)
+    chart_offices(c, rx, ry - 102, col_w, 96)
 
-    y = min(ly - 142, ry - 110) - 12
+    y = min(ly - 130, ry - 102) - 10
 
     y = heading(c, "Key Takeaways", M, y)
     takeaways = [
-        "<b>The price of a Riverside home hasn’t moved in 2½ years</b> — $600,000 median, $321 per "
-        "square foot — but each sale takes a few days longer than it used to.",
-        "<b>More sellers, same number of buyers:</b> homes listed for sale jumped 23% in early 2026 while "
-        "purchases stayed flat — inventory is building, which favors buyers.",
-        "<b>Who sells Riverside changed:</b> a local independent, Equity Union, now edges out the national "
-        "brands — #1 by a margin of just 20 sales over Coldwell Banker Realty and Compass.",
-        "<b>The cash-offer experiment ended here:</b> Opendoor, the app that bought homes directly, fell "
-        "from 0.8% to 0.2% of listings; traditional agents kept the market.",
-        "<b>What to watch:</b> if supply keeps outrunning sales, expect buyers to win bigger discounts "
-        "first (the sale-to-ask ratio), and asking prices to bend only after that.",
+        "<b>The buyer paid for the freeze:</b> the frozen $600,000 median at stuck 6–7% rates means "
+        "about $3,060/month — and 30 months of waiting delivered just $48/month of relief, none of it from price.",
+        "<b>Scarcity did the squeezing:</b> in 2024–25 only ~1.05 homes were listed per home sold, so high "
+        "rates never forced prices down — buyers absorbed the entire cost.",
+        "<b>2026 is the first crack:</b> listings jumped 23% against flat sales; buyers finally gain choice, "
+        "and about $12,000 of negotiating room on the median home.",
+        "<b>The squeeze is redrawing the industry:</b> a local independent now edges the national brands for "
+        "#1 in Riverside, low-fee brokerages are doubling share where affordability is tightest, and the "
+        "cash-offer app is gone (0.8%→0.2%).",
+        "<b>What to watch:</b> if supply keeps outrunning sales, buyer relief should show up first in "
+        "sale-to-ask, and only later in the $600K median itself.",
     ]
     for t in takeaways:
         y = para(c, "•&nbsp;&nbsp;" + t, M + 2, y, CW - 4, BULLET) - 2
@@ -240,7 +243,10 @@ def main():
     c.setStrokeColor(TILE_BD)
     c.setLineWidth(0.7)
     c.line(M, fy, W - M, fy)
-    para(c, "CRMLS closed residential sales, Riverside County, Jan 2024 – Jun 2026. Supply–sales "
+    para(c, "CRMLS closed residential sales, Riverside County, Jan 2024 – Jun 2026. Payment math: 20% down, "
+            "principal and interest only, national average 30-yr fixed rate (FRED) joined to each month; no taxes, "
+            "insurance, or PMI. Brokerage business-model labels reflect the firms’ public descriptions; commission "
+            "data is outside this dataset. Supply–sales "
             "comparisons are Jan–Jun of each year (like-for-like; no annualization anywhere). 255 placeholder "
             "records excluded from rankings; sale-to-ask guarded to (0,2]; DOM and sale-to-ask tiles are "
             "IQR-filtered averages, price tiles are all-rows medians. Statewide figures (Compass volume, "
